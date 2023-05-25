@@ -19,6 +19,7 @@ def handle_registration():
             node_ports[address[1]] = True
             # Invia la lista aggiornata dei nodi connessi a tutti i nodi registrati
             node_list = "\n".join([str(port) for port in node_ports.keys() if node_ports[port] == True])
+            print(node_list)
             for port in node_ports.keys():
                 socket_send.sendto(node_list.encode(), ('localhost', port))
             print(node_ports)
