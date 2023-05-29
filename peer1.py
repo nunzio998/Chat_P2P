@@ -6,15 +6,15 @@ import threading
 
 # Procedura di registrazione al coordinatore
 
-coordinator1_port = 8000
+coordinator1_to_send_port = 8000  # porta a cu il coordinatore ascolta (dalla quale invio al coordinatore)
+coordinator1_to_receive_port = 6000  # Porta dalla quale ricevo dal coordinatore
 
 # creo porta di registrazione casuale che sarà anche quella di ricezione:
 port = randint(1, 60000)
 
-#Creo una lista di nodi peer inizialmente vuota
+# Creo una lista di nodi peer inizialmente vuota
 
 lista_nodi = []
-
 
 
 def receive_from_server():
@@ -41,10 +41,10 @@ def receive():
 
 def register():
     # Invia una richiesta di registrazione al nodo coordinatore
-    socket_register.sendto("REGISTER".encode(), ('localhost', coordinator1_port))
+    socket_register.sendto("REGISTER".encode(), ('localhost', coordinator1_to_send_port))
 
     # Invia la porta al nodo coordinatore per la comunicazione
-    socket_register.sendto(str(port).encode(), ('localhost', coordinator1_port))
+    socket_register.sendto(str(port).encode(), ('localhost', coordinator1_to_send_port))
 
     # Ricevi la lista dei nodi connessi dal coordinatore
     data, _ = socket_register.recvfrom(1024)
@@ -55,7 +55,7 @@ def register():
 
 
 def disconnect():
-    socket_register.sendto("DISCONNECT".encode(), ('localhost', coordinator1_port))
+    socket_register.sendto("DISCONNECT".encode(), ('localhost', coordinator1_to_send_port))
 
     # Chiudi il socket di registrazione
     socket_register.close()
