@@ -31,15 +31,15 @@ def message_handler():
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind(('localhost', 8000))
+socket_receive.bind(('localhost', 8002))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind(('localhost', 8001))
+socket_send.bind(('localhost', 8003))
 
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
-port_next = 8002
+port_next = 8000
 my_node_id = "1"
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
