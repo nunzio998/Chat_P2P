@@ -46,7 +46,7 @@ def message_handler():
             # procedura di discovery da sviluppare
             pass
         elif msg_type == "STANDARD":
-            if id_mittente == my_node_id:  # il mittente sono io, quel nickname non esiste
+            if id_mittente == my_node_id and id_destinatario != my_node_id:  # il mittente sono io, quel nickname non esiste
                 print("Non esiste un nodo con nickname {}\n".format(id_destinatario))
             elif id_destinatario == my_node_id:
                 handle_message(id_mittente, msg)

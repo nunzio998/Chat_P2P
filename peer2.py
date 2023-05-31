@@ -70,7 +70,7 @@ socket_send.bind(('localhost', 8003))
 
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
-port_next = 8000
+port_next = 8004
 
 # Id del nodo:
 my_node_id = "2"
