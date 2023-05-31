@@ -71,7 +71,9 @@ socket_send.bind(('localhost', 8001))
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
 port_next = 8002
-my_node_id = "2"
+
+# Id del nodo:
+my_node_id = "1"
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 receive_message_thread = threading.Thread(target=message_handler, args=())
