@@ -17,11 +17,23 @@ con un nuovo identificativo.
 
 # Funzione per la gestione dei messaggi ricevuti
 def handle_message(sender, message):
+    """
+    Funzione che ha il solo scopo di stampare a schermo il messaggio e chi lo ha inviato.
+    :param sender:
+    :param message:
+    :return:
+    """
     print(f"Messaggio ricevuto da {sender}: {message}\n")
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
 def send_message():
+    """
+    La funziona ha lo scopo di inviare messaggi standard dei nodi lungo la rete ad anello.
+    Accetta messaggi in input dall'utente con i quali compone il messaggio da inviare che avrà
+    il seguente formato: 'TIPO_MESSAGGIO#ID_MITTENTE#ID_DESTINATARIO#MESSAGGIO'
+    :return:
+    """
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
         message = "STANDARD" + "#" + my_node_id + "#" + destinatario + "#" + input("messaggio: ")
@@ -46,13 +58,16 @@ def message_handler():
             # procedura di discovery da sviluppare
             pass
         elif msg_type == "STANDARD":
-            if id_mittente == my_node_id and id_destinatario != my_node_id:  # il mittente sono io, quel nickname non esiste
+            if id_mittente == my_node_id and id_destinatario != my_node_id:
+                # il mittente sono io, ma non sono il destinatario
+                # questo vuol dire che ho inviato un messaggio ad un destinatario che non esiste
                 print("Non esiste un nodo con nickname {}\n".format(id_destinatario))
             elif id_destinatario == my_node_id:
+                # Il messaggio è indirizzato a me, quindi lo gestisco
                 handle_message(id_mittente, msg)
             else:
                 # il messaggio non è stato mandato da me e non è diretto a me
-                # allora lo inoltro al prossimo nodo, continua il giro
+                # allora lo inoltro al prossimo nodo, continua il giro.
                 socket_send.sendto(message.encode(), (ip_next, port_next))
         else:
             # messaggio non riconosciuto
@@ -76,15 +91,15 @@ port_next = 8000
 my_node_id = "3"
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
-receive_message_thread = threading.Thread(target=message_handler, args=())
-receive_message_thread.start()
+message_handler_thread = threading.Thread(target=message_handler, args=())
+message_handler_thread.start()
 
 # Creo e avvio il thread per la gestione dell'invio dei messaggi
 send_message_thread = threading.Thread(target=send_message, args=())
 send_message_thread.start()
 
 # Attendi la terminazione dei thread
-receive_message_thread.join()
+message_handler_thread.join()
 send_message_thread.join()
 
 # Chiudi i socket
