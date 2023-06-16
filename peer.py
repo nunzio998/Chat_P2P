@@ -70,6 +70,8 @@ def message_handler():
                 # il messaggio non è stato mandato da me e non è diretto a me
                 # allora lo inoltro al prossimo nodo, continua il giro.
                 socket_send.sendto(message.encode(), (ip_next, port_next))
+        elif msg_type == "QUIT":
+            ip_next, port_next = msg.split("-")
         else:
             # messaggio non riconosciuto
             # handle_message(id_mittente, msg)
