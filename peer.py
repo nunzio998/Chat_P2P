@@ -1,5 +1,6 @@
 import socket
 import threading
+from sys import argv
 
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
@@ -29,8 +30,8 @@ def handle_message(sender, message):
 # Funzione per inviare un messaggio al nodo successivo nel ring
 def send_message():
     """
-    La funziona ha lo scopo di inviare messaggi standard dei nodi lungo la rete ad anello.
-    Accetta messaggi in input dall'utente con i quali compone il messaggio da inviare che avrà
+    La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
+    Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
     il seguente formato: 'TIPO_MESSAGGIO#ID_MITTENTE#ID_DESTINATARIO#MESSAGGIO'
     :return:
     """
@@ -76,18 +77,20 @@ def message_handler():
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind(('localhost', 8000))
+socket_receive.bind(('localhost', int(argv[1])))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind(('localhost', 8001))
+socket_send.bind(('localhost', int(argv[2])))
+
+# La procedura di JOIN parte da qui:
 
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
-port_next = 8002
+port_next = int(argv[3])
 
 # Id del nodo:
-my_node_id = "1"
+my_node_id = argv[4]
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())

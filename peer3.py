@@ -37,6 +37,7 @@ def send_message():
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
         message = "STANDARD" + "#" + my_node_id + "#" + destinatario + "#" + input("messaggio: ")
+        print(message + "\n")
         socket_send.sendto(message.encode(), (ip_next, port_next))
 
 
@@ -76,18 +77,18 @@ def message_handler():
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind(('localhost', 8000))
+socket_receive.bind(('localhost', 8004))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind(('localhost', 8001))
+socket_send.bind(('localhost', 8005))
 
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
-port_next = 8002
+port_next = 8000
 
 # Id del nodo:
-my_node_id = "1"
+my_node_id = "3"
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())

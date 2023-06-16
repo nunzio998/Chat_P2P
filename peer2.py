@@ -37,6 +37,7 @@ def send_message():
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
         message = "STANDARD" + "#" + my_node_id + "#" + destinatario + "#" + input("messaggio: ")
+        print(message + "\n")
         socket_send.sendto(message.encode(), (ip_next, port_next))
 
 
@@ -57,7 +58,7 @@ def message_handler():
             # procedura di discovery da sviluppare
             pass
         elif msg_type == "STANDARD":
-            if id_mittente == my_node_id and id_destinatario != my_node_id:
+            if id_mittente == my_node_id:
                 # il mittente sono io, ma non sono il destinatario
                 # questo vuol dire che ho inviato un messaggio ad un destinatario che non esiste
                 print("Non esiste un nodo con nickname {}\n".format(id_destinatario))
@@ -76,18 +77,20 @@ def message_handler():
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind(('localhost', 8000))
+socket_receive.bind(('localhost', 8002))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind(('localhost', 8001))
+socket_send.bind(('localhost', 8003))
 
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
-port_next = 8002
+port_next = 8004
 
 # Id del nodo:
-my_node_id = "1"
+my_node_id = "2"
+
+# Inizio della procedura di JOIN da questo punto in poi
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
