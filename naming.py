@@ -9,12 +9,12 @@ def check_name(name: str) -> bool:
     :param name:
     :return: restituisce true se la stringa rappresenta un nome valido
     """
-    if not re.match(r'^[A-Za-z]{6}\d{2}$', name):
-        raise ValueError('Il nickname inserito non rispetta i parametri..')
-    return True
+    if re.match(r'^[A-Za-z]{6}\d{2}$', name):
+        return True
+    return False
 
 
-def format_name(name:str) -> str:
+def format_name(name: str) -> str:
     """
     Formatta la stringa in ingresso in XXXXXXdd con X carattere maiuscolo
 

@@ -2,6 +2,7 @@ import socket
 import threading
 import argparse
 import re
+from naming import *
 
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
@@ -90,8 +91,8 @@ args = parser.parse_args()
 
 # Controllo che il nickname scelto sia nel formato corretto (stabilito dalla regex r'^[A-Z]{6}\d{2}$'). Se
 # non lo è termino il processo.
-if not re.match(r'^[A-Za-z]{6}\d{2}$', args.nickname):
-    raise ValueError('Il nickname inserito non rispetta i parametri..')
+if not check_name(args.nickname):
+    raise ValueError('Il nickname inserito non rispetta i parametri. Riprovare con un nickname valido.')
 
 
 # Crea un socket per la ricezione dei messaggi
