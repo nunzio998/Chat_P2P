@@ -1,6 +1,7 @@
 import socket
 import threading
-from sys import argv
+import argparse
+import re
 
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
@@ -75,22 +76,52 @@ def message_handler():
             print("il formato del messaggio {} non è riconosciuto\n".format(message))
 
 
+# Faccio il parsing degli argomenti passati in input dall'utente:
+parser = argparse.ArgumentParser(description="Parametri descrittivi del peer")
+parser.add_argument("nickname", type=str, help="nickname identificativo con cui l'host vuole aggiungersi")
+parser.add_argument("IP_sock_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
+parser.add_argument("PORT_sock_rec", type=int, help="Porta di ricezione dei messaggi")
+parser.add_argument("IP_socket_send", type=str, default="localhost", help="IP della porta di invio dei messaggi")
+parser.add_argument("PORT_socket_send", type=int, help="Porta di invio dei messaggi")
+parser.add_argument('-f', nargs=2, metavar=('IP', 'PORT'), help='Specificare l\'indirizzo IP e la porta del nodo a '
+                                                                'cui voglio collegarmi')
+# Parsa gli argomenti dalla riga di comando
+args = parser.parse_args()
+
+# Controllo che il nickname scelto sia nel formato corretto (stabilito dalla regex r'^[A-Z]{6}\d{2}$'). Se
+# non lo è termino il processo.
+if not re.match(r'^[A-Za-z]{6}\d{2}$', args.nickname):
+    raise ValueError('Il nickname inserito non rispetta i parametri..')
+
+
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind(('localhost', int(argv[1])))
+socket_receive.bind((args.IP_sock_rec, args.PORT_sock_rec))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind(('localhost', int(argv[2])))
+socket_send.bind((args.IP_socket_send, args.PORT_socket_send))
 
-# La procedura di JOIN parte da qui:
+# Se specifico ip e porta del nodo a cui voglio connettermi allora mi sto connettendo ad un anello già
+# esistente. Altrimenti sono il primo di un nuovo anello, per cui la procedura di join non deve essere
+# avviata.
+if args.f:
+    # Variabili per l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
+    ip_prec, port_prec = args.f
 
-# Variabili per l'indirizzo del nodo successivo nel ring
-ip_next = 'localhost'
-port_next = int(argv[3])
+    # La procedura di JOIN parte da qui:
 
-# Id del nodo:
-my_node_id = argv[4]
+    # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
+    # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
+    my_node_id = args.nickname.upper()
+    ip_next = "ip del nodo successivo"
+    port_next = "porta del nodo successivo"
+else:  # Se sono il primo di un nuovo ring
+    my_node_id = args.nickname.upper()
+    ip_prec = None
+    port_prec = None
+    ip_next = None
+    port_next = None
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
