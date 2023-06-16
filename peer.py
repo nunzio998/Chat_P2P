@@ -1,7 +1,6 @@
 import socket
 import threading
 import argparse
-import re
 from naming import *
 
 """
@@ -114,11 +113,11 @@ if args.f:
 
     # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
     # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
-    my_node_id = args.nickname.upper()
+    my_node_id = format_name(args.nickname)
     ip_next = "ip del nodo successivo"
     port_next = "porta del nodo successivo"
 else:  # Se sono il primo di un nuovo ring
-    my_node_id = args.nickname.upper()
+    my_node_id = format_name(args.nickname)
     ip_prec = None
     port_prec = None
     ip_next = None
