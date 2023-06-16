@@ -83,6 +83,8 @@ socket_receive.bind(('localhost', int(argv[1])))
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 socket_send.bind(('localhost', int(argv[2])))
 
+# La procedura di JOIN parte da qui:
+
 # Variabili per l'indirizzo del nodo successivo nel ring
 ip_next = 'localhost'
 port_next = int(argv[3])
