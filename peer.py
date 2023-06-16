@@ -79,9 +79,9 @@ def message_handler():
 # Faccio il parsing degli argomenti passati in input dall'utente:
 parser = argparse.ArgumentParser(description="Parametri descrittivi del peer")
 parser.add_argument("nickname", type=str, help="nickname identificativo con cui l'host vuole aggiungersi")
-parser.add_argument("IP_sock_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
+parser.add_argument("-IP_sock_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
 parser.add_argument("PORT_sock_rec", type=int, help="Porta di ricezione dei messaggi")
-parser.add_argument("IP_socket_send", type=str, default="localhost", help="IP della porta di invio dei messaggi")
+parser.add_argument("-IP_socket_send", type=str, default="localhost", help="IP della porta di invio dei messaggi")
 parser.add_argument("PORT_socket_send", type=int, help="Porta di invio dei messaggi")
 parser.add_argument('-f', nargs=2, metavar=('IP', 'PORT'), help='Specificare l\'indirizzo IP e la porta del nodo a '
                                                                 'cui voglio collegarmi')
