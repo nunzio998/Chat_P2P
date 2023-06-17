@@ -2,6 +2,7 @@ import socket
 import threading
 import argparse
 from naming import *
+from message_handler_utils import *
 from Nodo import Nodo
 
 """
@@ -79,18 +80,15 @@ def message_handler(peer: Nodo):
             pass
         elif msg_type == "CONNECTION_REFUSED":
             pass
+
         elif msg_type == "STANDARD":
-            if id_mittente == peer.get_nickname() and id_destinatario != peer.get_nickname():
-                # il mittente sono io, ma non sono il destinatario
-                # questo vuol dire che ho inviato un messaggio ad un destinatario che non esiste
-                print("Non esiste un nodo con nickname {}\n".format(id_destinatario))
-            elif id_destinatario == peer.get_nickname():
-                # Il messaggio è indirizzato a me, quindi lo gestisco
-                handle_message(id_mittente, msg)
-            else:
-                # il messaggio non è stato mandato da me e non è diretto a me
-                # allora lo inoltro al prossimo nodo, continua il giro.
-                socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+            # messaggio di tipo standard
+            standard_message_handler(peer, id_mittente, id_destinatario, msg, socket_send)
+
+        elif msg_type == "ACK":
+            # messaggio di tipo ack
+            ack_message_handler(peer, id_destinatario, msg, socket_send)
+
         elif msg_type == "QUIT":
             peer.set_IP_next(msg.split("ç")[0])
             peer.set_PORT_next(msg.split("ç")[1])
