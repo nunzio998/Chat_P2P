@@ -119,12 +119,49 @@ if not check_name(args.nickname):
     raise ValueError('Il nickname inserito non rispetta i parametri. Riprovare con un nickname valido.')
 
 # Crea un socket per la ricezione dei messaggi
-socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind((args.IP_socket_rec, args.PORT_socket_rec))
+try:
+    socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    socket_receive.bind((args.IP_socket_rec, args.PORT_socket_rec))
+except OSError as error:
+    print(f"Errore con la porta:{args.PORT_socket_rec}", error)
+    if input(f"\nVuoi terminare il processo che impegna la porta {args.PORT_socket_rec}? [s/n]\n") != "s":
+        raise ValueError('Non è possibile utilizzare le porte selezionate. '
+                         'Riprovare con altri valori oppure terminare i processi che occupano le porte.')
+
+    connection = psutil.net_connections()
+    pid = None
+    for conn in connection:
+        if conn.laddr.port == args.PORT_socket_rec:
+            pid = conn.pid
+            break
+    if pid:
+        process = psutil.Process(pid)
+        process.terminate()
+        process.wait()
+    socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    socket_receive.bind((args.IP_socket_rec, args.PORT_socket_rec))
 
 # Crea un socket per l'invio dei messaggi
-socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_send.bind((args.IP_socket_send, args.PORT_socket_send))
+try:
+    socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    socket_send.bind((args.IP_socket_send, args.PORT_socket_send))
+except OSError as error:
+    print(f"Errore con la porta:{args.PORT_socket_send}", error)
+    if input(f"\nVuoi terminare il processo che impegna la porta {args.PORT_socket_send}? [s/n]\n") != "s":
+        raise ValueError('Non è possibile utilizzare le porte selezionate. '
+                         'Riprovare con altri valori oppure terminare i processi che occupano le porte.')
+    connection = psutil.net_connections()
+    pid = None
+    for conn in connection:
+        if conn.laddr.port == args.PORT_socket_send:
+            pid = conn.pid
+            break
+    if pid:
+        process = psutil.Process(pid)
+        process.terminate()
+        process.wait()
+    socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    socket_send.bind((args.IP_socket_send, args.PORT_socket_send))
 
 # Se specifico ip e porta del nodo a cui voglio connettermi allora mi sto connettendo ad un anello già
 # esistente. Altrimenti sono il primo di un nuovo anello, per cui la procedura di join non deve essere
