@@ -42,7 +42,7 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message, 
         print(f"Messaggio ricevuto da {id_mittente}: {message}\n")
 
         # invio un messaggio di ack al mittente
-        ack_msg = "ACK" + "#" + peer.get_nickname() + "#" + id_destinatario + "#" + f"{id_destinatario} ha ricevuto correttamente il messaggio"
+        ack_msg = "ACK" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_destinatario} ha ricevuto correttamente il messaggio"
         socket_send.sendto(ack_msg.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
     else:
