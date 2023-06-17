@@ -3,6 +3,7 @@ import threading
 import argparse
 from naming import *
 from Nodo import Nodo
+import psutil
 
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
@@ -103,8 +104,8 @@ def message_handler(peer: Nodo):
 # Faccio il parsing degli argomenti passati in input dall'utente:
 parser = argparse.ArgumentParser(description="Parametri descrittivi del peer")
 parser.add_argument("nickname", type=str, help="nickname identificativo con cui l'host vuole aggiungersi")
-parser.add_argument("-IP_sock_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
-parser.add_argument("PORT_sock_rec", type=int, help="Porta di ricezione dei messaggi")
+parser.add_argument("-IP_socket_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
+parser.add_argument("PORT_socket_rec", type=int, help="Porta di ricezione dei messaggi")
 parser.add_argument("-IP_socket_send", type=str, default="localhost", help="IP della porta di invio dei messaggi")
 parser.add_argument("PORT_socket_send", type=int, help="Porta di invio dei messaggi")
 parser.add_argument('-f', nargs=2, metavar=('IP', 'PORT'), help='Specificare l\'indirizzo IP e la porta del nodo a '
@@ -119,7 +120,7 @@ if not check_name(args.nickname):
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receive.bind((args.IP_sock_rec, args.PORT_sock_rec))
+socket_receive.bind((args.IP_socket_rec, args.PORT_socket_rec))
 
 # Crea un socket per l'invio dei messaggi
 socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
