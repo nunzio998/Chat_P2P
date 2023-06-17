@@ -42,21 +42,41 @@ def send_message():
         socket_send.sendto(message.encode(), (ip_next, port_next))
 
 
+def send_connection_refused_message(address):
+    message = "CONNECTION_REFUSED" + "#" + my_node_id + "#" + "" + "#" + ""
+    socket_send.sendto(message.encode(), address)
+
+
+def send_discovery_query():
+    pass
+
+
 # Funzione per la gestione dei messaggi ricevuti
 def message_handler():
+    joiner_address = None
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
         msg_type, id_mittente, id_destinatario, msg = message.split("#")
-
         if msg_type == "JOIN":
             # Gestione del messaggio di join da un nuovo nodo
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
-            # Assegna il nickname disponibile al nuovo nodo
-            pass
-        elif msg_type == "DISCOVERY":
+            # Assegna il nickname se disponibile al nuovo nodo
+            joiner_address = address
+            send_discovery_query()
+        elif msg_type == "DISCOVERY_QUERY":
             # procedura di discovery da sviluppare
+            pass
+        elif msg_type == "DISCOVERY_ANSWER":
+            # procedura di discovery da sviluppare se ricevo un messaggio di questo tipo (e il mittente sono io)
+            # significa che il nickname non è disponibile. Quindi devo inviare un CONNECTION_REFUSED al mittente del
+            # messaggio di JOIN
+            if id_mittente == my_node_id:
+                # L'id destinatario non è disponibile. Devo mandare un messaggio connection refused.
+                send_connection_refused_message(joiner_address)
+            pass
+        elif msg_type == "CONNECTION_REFUSED":
             pass
         elif msg_type == "STANDARD":
             if id_mittente == my_node_id and id_destinatario != my_node_id:
@@ -94,7 +114,6 @@ args = parser.parse_args()
 # non lo è termino il processo.
 if not check_name(args.nickname):
     raise ValueError('Il nickname inserito non rispetta i parametri. Riprovare con un nickname valido.')
-
 
 # Crea un socket per la ricezione dei messaggi
 socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
