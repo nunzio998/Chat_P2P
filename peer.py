@@ -40,6 +40,14 @@ def send_message(peer: Nodo):
     """
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
+
+        if destinatario == "QUIT":
+            # disconnessione volontaria
+            message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}ç{peer.get_PORT_next()}"
+            socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
+            message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}ç{peer.get_PORT_prec()}"
+            socket_send.sendto(message_back.encode(), peer.get_IP_next(), peer.get_PORT_next())
+
         message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
         socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
