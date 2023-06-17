@@ -8,7 +8,7 @@ import psutil
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
 stringa. 
-Il formato dei messaggi è attualmente il seguente: 'tipo_messaggio#mittente#destinatario#messaggio'
+Il formato dei messaggi è attualmente il seguente: 'tipo_messaggio§mittente§destinatario§messaggio'
 il tipo di messaggio può essere molteplice:
 - messaggio normale 
 - messaggio di discovery
@@ -35,17 +35,17 @@ def send_message(peer: Nodo):
     """
     La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
     Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
-    il seguente formato: 'TIPO_MESSAGGIO#ID_MITTENTE#ID_DESTINATARIO#MESSAGGIO'
+    il seguente formato: 'TIPO_MESSAGGIO§ID_MITTENTE§ID_DESTINATARIO§MESSAGGIO'
     :return:
     """
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
-        message = "STANDARD" + "#" + peer.get_nickname() + "#" + destinatario + "#" + input("messaggio: ")
+        message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
         socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
 
 def send_connection_refused_message(peer: Nodo, address):
-    message = "CONNECTION_REFUSED" + "#" + peer.get_nickname() + "#" + "" + "#" + ""
+    message = "CONNECTION_REFUSED" + "§" + peer.get_nickname() + "§" + "" + "§" + ""
     socket_send.sendto(message.encode(), address)
 
 
@@ -59,7 +59,7 @@ def message_handler(peer: Nodo):
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = message.split("#")
+        msg_type, id_mittente, id_destinatario, msg = message.split("§")
         if msg_type == "JOIN":
             # Gestione del messaggio di join da un nuovo nodo
             # Invia i tuoi ip_next e port_next al nuovo nodo
