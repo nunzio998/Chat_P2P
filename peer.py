@@ -145,13 +145,15 @@ else:  # Se sono il primo di un nuovo ring
     port_prec = None
     ip_next = None
     port_next = None
+
 nodo = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next)
+
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
-message_handler_thread = threading.Thread(target=message_handler, args=())
+message_handler_thread = threading.Thread(target=message_handler, args=([nodo]))
 message_handler_thread.start()
 
 # Creo e avvio il thread per la gestione dell'invio dei messaggi
-send_message_thread = threading.Thread(target=send_message, args=())
+send_message_thread = threading.Thread(target=send_message, args=([nodo]))
 send_message_thread.start()
 
 # Attendi la terminazione dei thread
