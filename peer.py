@@ -2,6 +2,7 @@ import socket
 import threading
 import argparse
 from naming import *
+from Nodo import Nodo
 
 """
 i nodi vengono riconosciuti nel ring tramite un identificativo numerico o alfanumerico in formato di
@@ -29,7 +30,7 @@ def handle_message(sender, message):
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
-def send_message():
+def send_message(peer: Nodo):
     """
     La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
     Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
@@ -38,12 +39,12 @@ def send_message():
     """
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
-        message = "STANDARD" + "#" + my_node_id + "#" + destinatario + "#" + input("messaggio: ")
-        socket_send.sendto(message.encode(), (ip_next, port_next))
+        message = "STANDARD" + "#" + peer.get_nickname() + "#" + destinatario + "#" + input("messaggio: ")
+        socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
 
-def send_connection_refused_message(address):
-    message = "CONNECTION_REFUSED" + "#" + my_node_id + "#" + "" + "#" + ""
+def send_connection_refused_message(peer: Nodo, address):
+    message = "CONNECTION_REFUSED" + "#" + peer.get_nickname() + "#" + "" + "#" + ""
     socket_send.sendto(message.encode(), address)
 
 
@@ -52,7 +53,7 @@ def send_discovery_query():
 
 
 # Funzione per la gestione dei messaggi ricevuti
-def message_handler():
+def message_handler(peer: Nodo):
     joiner_address = None
     while True:
         data, address = socket_receive.recvfrom(1024)
@@ -72,26 +73,27 @@ def message_handler():
             # procedura di discovery da sviluppare se ricevo un messaggio di questo tipo (e il mittente sono io)
             # significa che il nickname non è disponibile. Quindi devo inviare un CONNECTION_REFUSED al mittente del
             # messaggio di JOIN
-            if id_mittente == my_node_id:
+            if id_mittente == peer.get_nickname():
                 # L'id destinatario non è disponibile. Devo mandare un messaggio connection refused.
                 send_connection_refused_message(joiner_address)
             pass
         elif msg_type == "CONNECTION_REFUSED":
             pass
         elif msg_type == "STANDARD":
-            if id_mittente == my_node_id and id_destinatario != my_node_id:
+            if id_mittente == peer.get_nickname() and id_destinatario != peer.get_nickname():
                 # il mittente sono io, ma non sono il destinatario
                 # questo vuol dire che ho inviato un messaggio ad un destinatario che non esiste
                 print("Non esiste un nodo con nickname {}\n".format(id_destinatario))
-            elif id_destinatario == my_node_id:
+            elif id_destinatario == peer.get_nickname():
                 # Il messaggio è indirizzato a me, quindi lo gestisco
                 handle_message(id_mittente, msg)
             else:
                 # il messaggio non è stato mandato da me e non è diretto a me
                 # allora lo inoltro al prossimo nodo, continua il giro.
-                socket_send.sendto(message.encode(), (ip_next, port_next))
+                socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         elif msg_type == "QUIT":
-            ip_next, port_next = msg.split("-")
+            peer.set_IP_next(msg.split("ç")[0])
+            peer.set_PORT_next(msg.split("ç")[1])
         else:
             # messaggio non riconosciuto
             # handle_message(id_mittente, msg)
@@ -143,7 +145,7 @@ else:  # Se sono il primo di un nuovo ring
     port_prec = None
     ip_next = None
     port_next = None
-
+nodo = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next)
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
 message_handler_thread.start()
