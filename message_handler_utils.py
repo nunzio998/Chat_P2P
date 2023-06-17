@@ -116,5 +116,14 @@ def send_discovery_query(peer, id_mittente, socket_send):
     :param socket_send:
     :return:
     """
-    discovery_query_msg = "DISCOVERY_QUERY" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_mittente} vorrebbe unisrsi alla chat"
-    socket_send.sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+    if id_mittente == peer.get_nickname():
+        # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
+
+        # ------------------------------ #
+        # Procedura di CONNECTION_REFUSED
+        # ------------------------------ #
+        pass
+
+    else:
+        discovery_query_msg = "DISCOVERY_QUERY" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_mittente} vorrebbe unisrsi alla chat"
+        socket_send.sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
