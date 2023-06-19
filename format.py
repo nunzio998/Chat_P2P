@@ -29,6 +29,3 @@ class Formatting:
         msg = tuple(campi[-1].split(Formatting.sep_payload))
         if len(msg) == 1: msg = msg[0]
         return {"Tipo": campi[0], "id_mittente": campi[1], "id_destinatario": campi[2], "payload": msg}
-
-print(Formatting.unpacking("prova§mit§dest§ciao"))
-print(Formatting.packing("tipo",3,4,(6678,"prova")))
