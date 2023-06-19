@@ -1,4 +1,6 @@
 import naming as nm
+
+
 class Formatting:
     sep_packet = "§"
     sep_payload = "£"
@@ -28,6 +30,13 @@ class Formatting:
             raise TypeError("Il pacchetto deve essere di tipo stringa")
         campi = messaggio.split(Formatting.sep_packet)
         msg = tuple(campi[-1].split(Formatting.sep_payload))
+        messaggio = []
+        for el in msg:
+            try:
+                el = int(el)
+                messaggio.append(el)
+            except:
+                messaggio.append(el)
         if len(msg) == 1: msg = msg[0]
         return {"Tipo": campi[0], "id_mittente": nm.format_name(campi[1]), "id_destinatario": nm.format_name(campi[2]),
-                "payload": msg}
+                "payload": tuple(messaggio)}
