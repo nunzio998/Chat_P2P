@@ -83,6 +83,7 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
 def discovery_answer_handler(peer, id_destinatario, msg, joiner_address):
     """
     Funzione che ha il compito gestire i messaggi di tipo DISCOVERY_ANSWER.
+    :param joiner_address:
     :param peer:
     :param id_destinatario:
     :param msg:
@@ -103,18 +104,17 @@ def discovery_answer_handler(peer, id_destinatario, msg, joiner_address):
         peer.get_socket_send.sendto(msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
-def send_discovery_query(peer, id_mittente, joiner_address):
+def send_discovery_query(peer: Nodo, id_mittente, joiner_address):
     """
     Funzione che ha il compito d'inviare un messaggio di tipo DISCOVERY_QUERY
+    :param joiner_address:
     :param peer:
     :param id_mittente:
     :return:
     """
     if id_mittente == peer.get_nickname():
         # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
-
         send_connection_refused_message(peer, joiner_address)
-        pass
 
     else:
         discovery_query_msg = "DISCOVERY_QUERY" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_mittente} vorrebbe unisrsi alla chat"
