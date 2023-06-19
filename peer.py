@@ -27,7 +27,8 @@ def send_message():
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
         if check_name(destinatario):
-            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario, input("Messaggio:\n"))
+            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
+            print(message,peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         else:
             print("Il nickname indicato non è valido.")
@@ -44,6 +45,7 @@ def message_handler():
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
+        print(f"è arrivato il messaggio: {message} da {address}")
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
 
         # handling del messaggio in base al tipo
@@ -52,27 +54,31 @@ def message_handler():
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
-            address = msg
+            joiner_address = msg
             if id_mittente == peer.get_nickname():
                 print("stesso nickname")
                 # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
-                send_connection_refused_message(peer, address)
+                send_connection_refused_message(peer, joiner_address)
             else:
-                send_discovery_query(peer, id_mittente, address)
+                send_discovery_query(peer, id_mittente)
 
         elif msg_type == "DISCOVERY_QUERY":
+            msg = msg[0]
             discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
 
         elif msg_type == "DISCOVERY_ANSWER":
-            discovery_answer_handler(peer, id_destinatario, msg, joiner_address)
+            msg = msg[0]
+            discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
 
         elif msg_type == "STANDARD":
             # messaggio di tipo standard
+            msg = msg[0]
             standard_message_handler(peer, id_mittente, id_destinatario, msg)
 
         elif msg_type == "ACK":
             # messaggio di tipo ack
-            ack_message_handler(peer, id_destinatario, msg)
+            msg = msg[0]
+            ack_message_handler(peer, id_mittente, id_destinatario, msg)
 
         elif msg_type == "QUIT":
             peer.set_IP_next(msg[0])
@@ -182,7 +188,7 @@ else:  # Se sono il primo di un nuovo ring
     ip_next = args.IP_socket_rec
     port_next = args.PORT_socket_rec
 
-peer = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next, socket_send, socket_receive)
+peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())

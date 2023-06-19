@@ -37,6 +37,5 @@ class Formatting:
                 messaggio.append(el)
             except:
                 messaggio.append(el)
-        if len(msg) == 1: msg = msg[0]
         return {"Tipo": campi[0], "id_mittente": nm.format_name(campi[1]), "id_destinatario": nm.format_name(campi[2]),
                 "payload": tuple(messaggio)}
