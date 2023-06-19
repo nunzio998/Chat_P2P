@@ -18,12 +18,12 @@ def send_message(peer: Nodo):
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
-        if destinatario == "QUIT":
+        if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}£{peer.get_PORT_next()}"
             socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
             message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}£{peer.get_PORT_prec()}"
-            socket_send.sendto(message_back.encode(), peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message_forward.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
         message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
         socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
@@ -141,6 +141,7 @@ except OSError as error:
 # Se specifico ip e porta del nodo a cui voglio connettermi allora mi sto connettendo ad un anello già
 # esistente. Altrimenti sono il primo di un nuovo anello, per cui la procedura di join non deve essere
 # avviata.
+my_node_id, ip_next, port_next = (None, None, None)
 if args.f:
     received_message = False  # Variabile che userò per verificare la ricezione di una risposta al messaggio di join
     # Variabili per l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN

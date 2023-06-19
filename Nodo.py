@@ -1,4 +1,6 @@
 import socket
+
+
 class Nodo:
 
     def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec, socket_send: socket, socket_recv: socket):
