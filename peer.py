@@ -20,9 +20,9 @@ def send_message(peer: Nodo):
 
         if destinatario == "QUIT":
             # disconnessione volontaria
-            message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}ç{peer.get_PORT_next()}"
+            message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}£{peer.get_PORT_next()}"
             socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
-            message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}ç{peer.get_PORT_prec()}"
+            message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}£{peer.get_PORT_prec()}"
             socket_send.sendto(message_back.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
         message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
@@ -64,8 +64,8 @@ def message_handler(peer: Nodo):
             ack_message_handler(peer, id_destinatario, msg)
 
         elif msg_type == "QUIT":
-            peer.set_IP_next(msg.split("ç")[0])
-            peer.set_PORT_next(msg.split("ç")[1])
+            peer.set_IP_next(msg.split("£")[0])
+            peer.set_PORT_next(msg.split("£")[1])
         elif msg_type == "CHANGE_PREC":
             new_prec_ip, new_prec_port = msg.split("£")
             peer.set_IP_prec(new_prec_ip)
@@ -165,10 +165,10 @@ if args.f:
             received_message = True
 else:  # Se sono il primo di un nuovo ring
     my_node_id = format_name(args.nickname)
-    ip_prec = None
-    port_prec = None
-    ip_next = None
-    port_next = None
+    ip_prec = args.IP_socket_rec
+    port_prec = args.PORT_socket_rec
+    ip_next = args.IP_socket_rec
+    port_next = args.PORT_socket_rec
 
 nodo = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next, socket_send, socket_receive)
 
