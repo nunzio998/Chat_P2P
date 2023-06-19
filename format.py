@@ -1,3 +1,4 @@
+import naming as nm
 class Formatting:
     sep_packet = "§"
     sep_payload = "£"
@@ -28,4 +29,5 @@ class Formatting:
         campi = messaggio.split(Formatting.sep_packet)
         msg = tuple(campi[-1].split(Formatting.sep_payload))
         if len(msg) == 1: msg = msg[0]
-        return {"Tipo": campi[0], "id_mittente": campi[1], "id_destinatario": campi[2], "payload": msg}
+        return {"Tipo": campi[0], "id_mittente": nm.format_name(campi[1]), "id_destinatario": nm.format_name(campi[2]),
+                "payload": msg}
