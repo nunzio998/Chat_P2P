@@ -9,7 +9,7 @@ from format import Formatting as fmt
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
-def send_message(peer: Nodo):
+def send_message():
     """
     La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
     Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
@@ -22,12 +22,12 @@ def send_message(peer: Nodo):
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
-            socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
+            socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
             message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
-            socket_send.sendto(message_forward.encode(), peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
         message = fmt.packing("STANDARD", peer.get_nickname(), destinatario, input("Messaggio:\n"))
-        socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
+        socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
 def send_join_message(ip_pre, port_pre, joiner_nickname):
@@ -36,7 +36,7 @@ def send_join_message(ip_pre, port_pre, joiner_nickname):
 
 
 # Funzione per la gestione dei messaggi ricevuti
-def message_handler(peer: Nodo):
+def message_handler():
     joiner_address = None
     while True:
         data, address = socket_receive.recvfrom(1024)
@@ -174,14 +174,14 @@ else:  # Se sono il primo di un nuovo ring
     ip_next = args.IP_socket_rec
     port_next = args.PORT_socket_rec
 
-nodo = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next, socket_send, socket_receive)
+peer = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next, socket_send, socket_receive)
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
-message_handler_thread = threading.Thread(target=message_handler, args=([nodo]))
+message_handler_thread = threading.Thread(target=message_handler, args=())
 message_handler_thread.start()
 
 # Creo e avvio il thread per la gestione dell'invio dei messaggi
-send_message_thread = threading.Thread(target=send_message, args=([nodo]))
+send_message_thread = threading.Thread(target=send_message, args=())
 send_message_thread.start()
 
 # Attendi la terminazione dei thread
