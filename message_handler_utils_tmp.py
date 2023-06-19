@@ -5,7 +5,6 @@ def ack_message_handler(peer: Nodo, id_destinatario, message, socket_send):
     """
     Funzione che ha il compito gestire i messaggi di tipo ACK.
     :param peer:
-    :param id_mittente:
     :param id_destinatario:
     :param message:
     :param socket_send:
@@ -42,7 +41,7 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message, 
         print(f"Messaggio ricevuto da {id_mittente}: {message}\n")
 
         # invio un messaggio di ack al mittente
-        ack_msg = "ACK" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_destinatario} ha ricevuto correttamente il messaggio"
+        ack_msg = "ACK" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_destinatario} ha ricevuto correttamente il messaggio"
         socket_send.sendto(ack_msg.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
     else:
@@ -61,18 +60,18 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, socket_send
     :param socket_send:
     :return:
     """
-    if id_mittente == peer.get_nickname() and id_destinatario != peer.get_nickname():
+    if id_mittente == peer.get_nickname():
         # il mittente sono io, ma non sono il destinatario
         # questo vuol dire che il nickname che ha scelto è disponibile
 
         # -------------------------------- #
-        # Procedura di CONNECTION_ACCEPTED
+        #  Invio di CONNECTION_ACCEPTED
         # -------------------------------- #
         pass
 
     elif id_destinatario == peer.get_nickname():
         # Il messaggio è indirizzato a me, quindi il nickname è occupato
-        discovery_answer_msg = "DISCOVERY_ANSWER" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_destinatario} è già in uso"
+        discovery_answer_msg = "DISCOVERY_ANSWER" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_destinatario} è già in uso"
         socket_send.sendto(discovery_answer_msg.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
     else:
@@ -85,7 +84,6 @@ def discovery_answer_handler(peer, id_destinatario, msg, socket_send):
     """
     Funzione che ha il compito gestire i messaggi di tipo DISCOVERY_ANSWER.
     :param peer:
-    :param id_mittente:
     :param id_destinatario:
     :param msg:
     :param socket_send:
@@ -97,7 +95,7 @@ def discovery_answer_handler(peer, id_destinatario, msg, socket_send):
         # il nickname che ha scelto non è disponibile
 
         # ------------------------------ #
-        # Procedura di CONNECTION_REFUSED
+        #  Invio di CONNECTION_REFUSED
         # ------------------------------ #
         pass
 
@@ -110,7 +108,7 @@ def discovery_answer_handler(peer, id_destinatario, msg, socket_send):
 
 def send_discovery_query(peer, id_mittente, socket_send):
     """
-    Funzione che ha il compito di inviare un messaggio di tipo DISCOVERY_QUERY
+    Funzione che ha il compito d'inviare un messaggio di tipo DISCOVERY_QUERY
     :param peer:
     :param id_mittente:
     :param socket_send:
@@ -125,5 +123,5 @@ def send_discovery_query(peer, id_mittente, socket_send):
         pass
 
     else:
-        discovery_query_msg = "DISCOVERY_QUERY" + "#" + peer.get_nickname() + "#" + id_mittente + "#" + f"{id_mittente} vorrebbe unisrsi alla chat"
+        discovery_query_msg = "DISCOVERY_QUERY" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_mittente} vorrebbe unisrsi alla chat"
         socket_send.sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
