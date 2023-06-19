@@ -1,11 +1,14 @@
+import socket
 class Nodo:
 
-    def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec):
+    def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec, socket_send: socket, socket_recv: socket):
         self.nickname = nick
         self.IP_next = IP_next
         self.PORT_next = PORT_next
         self.IP_prec = IP_prec
         self.PORT_prec = PORT_prec
+        self.socket_send = socket_send
+        self.socket_recv = socket_recv
 
     # Getter per il nickname
     def get_nickname(self):
@@ -14,6 +17,12 @@ class Nodo:
     # Getter per IP_next
     def get_IP_next(self):
         return self.IP_next
+
+    def get_socket_send(self):
+        return self.socket_send
+
+    def get_socket_recv(self):
+        return self.socket_recv
 
     # Setter per IP_next
     def set_IP_next(self, new_IP_next):
