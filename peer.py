@@ -19,14 +19,15 @@ def send_message():
     while True:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
-        if destinatario.upper() == "QUIT":
+        if destinatario == "":
+            print("\n")
+        elif destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
             message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
-
-        if check_name(destinatario):
+        elif check_name(destinatario):
             message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
             print(message,peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
