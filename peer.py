@@ -5,6 +5,7 @@ from naming import *
 from message_handler_utils import *
 from Nodo import Nodo
 import psutil
+from format import Formatting as fmt
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
@@ -20,17 +21,17 @@ def send_message(peer: Nodo):
 
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
-            message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}£{peer.get_PORT_next()}"
+            message_back = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
-            message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}£{peer.get_PORT_prec()}"
+            message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
-        message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
+        message = fmt.packing("STANDARD", peer.get_nickname(), destinatario, input("Messaggio:\n"))
         socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
 
 def send_join_message(ip_pre, port_pre, joiner_nickname):
-    message_join = "JOIN" + "§" + joiner_nickname + "§" + "" + "§" + ""
+    message_join = fmt.packing("JOIN", joiner_nickname, "", "")
     socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
 
 
@@ -40,7 +41,9 @@ def message_handler(peer: Nodo):
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = message.split("§")
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
+
+        # handling del messaggio in base al tipo
         if msg_type == "JOIN":
             # Gestione del messaggio di join da un nuovo nodo
             # Invia i tuoi ip_next e port_next al nuovo nodo
@@ -64,12 +67,11 @@ def message_handler(peer: Nodo):
             ack_message_handler(peer, id_destinatario, msg)
 
         elif msg_type == "QUIT":
-            peer.set_IP_next(msg.split("£")[0])
-            peer.set_PORT_next(msg.split("£")[1])
+            peer.set_IP_next(msg[0])
+            peer.set_PORT_next(msg[1])
         elif msg_type == "CHANGE_PREC":
-            new_prec_ip, new_prec_port = msg.split("£")
-            peer.set_IP_prec(new_prec_ip)
-            peer.set_PORT_prec(new_prec_port)
+            peer.set_IP_prec(msg[0])
+            peer.set_PORT_prec(msg[1])
         else:
             # messaggio non riconosciuto
             # handle_message(id_mittente, msg)
@@ -146,6 +148,7 @@ if args.f:
     received_message = False  # Variabile che userò per verificare la ricezione di una risposta al messaggio di join
     # Variabili per l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
     ip_prec, port_prec = args.f
+    port_prec = int(port_prec)
 
     # La procedura di JOIN parte da qui:
     # Mando messaggio di join
@@ -154,7 +157,7 @@ if args.f:
     while not received_message:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = message.split("§")
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
         if msg_type == "CONNECTION_REFUSED":
             received_message = True
             raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
@@ -162,7 +165,7 @@ if args.f:
             # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
             # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
             my_node_id = format_name(args.nickname)
-            ip_next, port_next = msg.split("£")
+            ip_next, port_next = msg
             received_message = True
 else:  # Se sono il primo di un nuovo ring
     my_node_id = format_name(args.nickname)

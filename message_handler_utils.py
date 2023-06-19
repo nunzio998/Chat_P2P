@@ -1,4 +1,5 @@
 from Nodo import Nodo
+from format import Formatting as fmt
 
 
 def ack_message_handler(peer: Nodo, id_destinatario, message):
@@ -39,7 +40,8 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
         print(f"Messaggio ricevuto da {id_mittente}: {message}\n")
 
         # invio un messaggio di ack al mittente
-        ack_msg = "ACK" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_destinatario} ha ricevuto correttamente il messaggio"
+        ack_msg = fmt.packing("ACK", peer.get_nickname(), id_mittente, f"{id_destinatario} ha ricevuto correttamente "
+                                                                       f"il messaggio")
         peer.get_socket_send.sendto(ack_msg.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
     else:
@@ -55,6 +57,7 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
     :param id_mittente:
     :param id_destinatario:
     :param msg:
+    :param joiner_address:
     :return:
     """
     if id_mittente == peer.get_nickname():
@@ -71,7 +74,8 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
 
     elif id_destinatario == peer.get_nickname():
         # Il messaggio è indirizzato a me, quindi il nickname è occupato
-        discovery_answer_msg = "DISCOVERY_ANSWER" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_destinatario} è già in uso"
+        discovery_answer_msg = fmt.packing("DISCOVERY_ANSWER", peer.get_nickname(), id_mittente,
+                                           f"{id_destinatario} è già in uso")
         peer.get_socket_send.sendto(discovery_answer_msg.encode(), peer.get_IP_next(), peer.get_PORT_next())
 
     else:
@@ -117,22 +121,22 @@ def send_discovery_query(peer: Nodo, id_mittente, joiner_address):
         send_connection_refused_message(peer, joiner_address)
 
     else:
-        discovery_query_msg = "DISCOVERY_QUERY" + "§" + peer.get_nickname() + "§" + id_mittente + "§" + f"{id_mittente} vorrebbe unisrsi alla chat"
+        discovery_query_msg = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
+                                          f"{id_mittente} vorrebbe unisrsi alla chat")
         peer.get_socket_send.sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
 def send_connection_accepted_message(peer: Nodo, join_node_address, joiner_nickname):
-    msg_accepted = peer.get_IP_next() + "£" + peer.get_PORT_next()
-    message_accepted = "CONNECTION_ACCEPTED" + "§" + peer.get_nickname() + "§" + joiner_nickname + "§" + msg_accepted
+    message_accepted = fmt.packing("CONNECTION_ACCEPTED", peer.get_nickname(), joiner_nickname, peer.get_IP_next(),
+                                   peer.get_PORT_next())
     peer.get_socket_send.sendto(message_accepted.encode(), join_node_address)
 
 
 def send_connection_refused_message(peer: Nodo, address):
-    message_refused = "CONNECTION_REFUSED" + "§" + peer.get_nickname() + "§" + "" + "§" + ""
+    message_refused = fmt.packing("CONNECTION_REFUSED", peer.get_nickname(), "", "")
     peer.get_socket_send.sendto(message_refused.encode(), address)
 
 
 def send_change_prec_message(peer: Nodo, addr_joiner):
-    msg_change_prec = addr_joiner[0] + "£" + addr_joiner[1]
-    message_change_prec = "CHANGE_PREC" + "§" + peer.get_nickname() + "§" + "" + "§" + msg_change_prec
+    message_change_prec = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", addr_joiner[0], addr_joiner[1])
     peer.get_socket_send.sendto(message_change_prec.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
