@@ -33,8 +33,8 @@ def send_message():
             print("Il nickname indicato non è valido.")
 
 
-def send_join_message(ip_pre, port_pre, joiner_nickname):
-    message_join = fmt.packing("JOIN", joiner_nickname, "", "")
+def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
+    message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0], socket_receive.getsockname()[1])
     socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
 
 
@@ -52,8 +52,13 @@ def message_handler():
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
-            joiner_address = address
-            send_discovery_query(peer, id_mittente, joiner_address)
+            address = msg
+            if id_mittente == peer.get_nickname():
+                print("stesso nickname")
+                # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
+                send_connection_refused_message(peer, address)
+            else:
+                send_discovery_query(peer, id_mittente, address)
 
         elif msg_type == "DISCOVERY_QUERY":
             discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
@@ -155,7 +160,7 @@ if args.f:
 
     # La procedura di JOIN parte da qui:
     # Mando messaggio di join
-    send_join_message(ip_prec, port_prec, args.nickname)
+    send_join_message(ip_prec, port_prec, args.nickname, socket_receive)
     # Aspetto un messaggio DISCOVERY QUERY O ANSWER
     while not received_message:
         data, address = socket_receive.recvfrom(1024)

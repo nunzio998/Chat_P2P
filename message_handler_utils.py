@@ -116,14 +116,9 @@ def send_discovery_query(peer: Nodo, id_mittente, joiner_address: tuple):
     :param id_mittente:
     :return:
     """
-    if id_mittente == peer.get_nickname():
-        # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
-        send_connection_refused_message(peer, joiner_address)
-
-    else:
-        discovery_query_msg = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
+    discovery_query_msg = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
                                           f"{id_mittente} vorrebbe unisrsi alla chat")
-        peer.get_socket_send().sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+    peer.get_socket_send().sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
 def send_connection_accepted_message(peer: Nodo, join_node_address: tuple, joiner_nickname: str):
