@@ -5,10 +5,11 @@ from naming import *
 from message_handler_utils import *
 from Nodo import Nodo
 import psutil
+from format import Formatting as fmt
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
-def send_message(peer: Nodo):
+def send_message():
     """
     La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
     Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
@@ -20,56 +21,71 @@ def send_message(peer: Nodo):
 
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
-            message_back = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_next()}£{peer.get_PORT_next()}"
-            socket_send.sendto(message_back.encode(), peer.get_IP_prec(), peer.get_PORT_prec())
-            message_forward = "QUIT" + "§" + peer.get_nickname() + "§" + "" + "§" + f"{peer.get_IP_prec()}£{peer.get_PORT_prec()}"
-            socket_send.sendto(message_forward.encode(), peer.get_IP_next(), peer.get_PORT_next())
+            message_back = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
+            message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
+            socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
-        message = "STANDARD" + "§" + peer.get_nickname() + "§" + destinatario + "§" + input("messaggio: ")
-        socket_send.sendto(message.encode(), peer.get_IP_next(), peer.get_PORT_next())
+        if check_name(destinatario):
+            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
+            print(message,peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        else:
+            print("Il nickname indicato non è valido.")
 
 
-def send_join_message(ip_pre, port_pre, joiner_nickname):
-    message_join = "JOIN" + "§" + joiner_nickname + "§" + "" + "§" + ""
+def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
+    message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0], socket_receive.getsockname()[1])
     socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
 
 
 # Funzione per la gestione dei messaggi ricevuti
-def message_handler(peer: Nodo):
+def message_handler():
     joiner_address = None
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = message.split("§")
+        print(f"è arrivato il messaggio: {message} da {address}")
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
+
+        # handling del messaggio in base al tipo
         if msg_type == "JOIN":
             # Gestione del messaggio di join da un nuovo nodo
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
-            joiner_address = address
-            send_discovery_query(peer, id_mittente, joiner_address)
+            joiner_address = msg
+            if id_mittente == peer.get_nickname():
+                print("stesso nickname")
+                # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
+                send_connection_refused_message(peer, joiner_address)
+            else:
+                send_discovery_query(peer, id_mittente)
 
         elif msg_type == "DISCOVERY_QUERY":
+            msg = msg[0]
             discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
 
         elif msg_type == "DISCOVERY_ANSWER":
-            discovery_answer_handler(peer, id_destinatario, msg, joiner_address)
+            msg = msg[0]
+            discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
 
         elif msg_type == "STANDARD":
             # messaggio di tipo standard
+            msg = msg[0]
             standard_message_handler(peer, id_mittente, id_destinatario, msg)
 
         elif msg_type == "ACK":
             # messaggio di tipo ack
-            ack_message_handler(peer, id_destinatario, msg)
+            msg = msg[0]
+            ack_message_handler(peer, id_mittente, id_destinatario, msg)
 
         elif msg_type == "QUIT":
-            peer.set_IP_next(msg.split("£")[0])
-            peer.set_PORT_next(msg.split("£")[1])
+            peer.set_IP_next(msg[0])
+            peer.set_PORT_next(msg[1])
         elif msg_type == "CHANGE_PREC":
-            new_prec_ip, new_prec_port = msg.split("£")
-            peer.set_IP_prec(new_prec_ip)
-            peer.set_PORT_prec(new_prec_port)
+            peer.set_IP_prec(msg[0])
+            peer.set_PORT_prec(msg[1])
         else:
             # messaggio non riconosciuto
             # handle_message(id_mittente, msg)
@@ -146,15 +162,16 @@ if args.f:
     received_message = False  # Variabile che userò per verificare la ricezione di una risposta al messaggio di join
     # Variabili per l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
     ip_prec, port_prec = args.f
+    port_prec = int(port_prec)
 
     # La procedura di JOIN parte da qui:
     # Mando messaggio di join
-    send_join_message(ip_prec, port_prec, args.nickname)
+    send_join_message(ip_prec, port_prec, args.nickname, socket_receive)
     # Aspetto un messaggio DISCOVERY QUERY O ANSWER
     while not received_message:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = message.split("§")
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
         if msg_type == "CONNECTION_REFUSED":
             received_message = True
             raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
@@ -162,7 +179,7 @@ if args.f:
             # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
             # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
             my_node_id = format_name(args.nickname)
-            ip_next, port_next = msg.split("£")
+            ip_next, port_next = msg
             received_message = True
 else:  # Se sono il primo di un nuovo ring
     my_node_id = format_name(args.nickname)
@@ -171,14 +188,14 @@ else:  # Se sono il primo di un nuovo ring
     ip_next = args.IP_socket_rec
     port_next = args.PORT_socket_rec
 
-nodo = Nodo(my_node_id, ip_prec, port_prec, ip_next, port_next, socket_send, socket_receive)
+peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
-message_handler_thread = threading.Thread(target=message_handler, args=([nodo]))
+message_handler_thread = threading.Thread(target=message_handler, args=())
 message_handler_thread.start()
 
 # Creo e avvio il thread per la gestione dell'invio dei messaggi
-send_message_thread = threading.Thread(target=send_message, args=([nodo]))
+send_message_thread = threading.Thread(target=send_message, args=())
 send_message_thread.start()
 
 # Attendi la terminazione dei thread
