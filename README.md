@@ -51,7 +51,11 @@ N.B: L’inserimento del nuovo host avviene sempre tra il nodo che riceve il joi
 
 
 ### Procedura di Discovery
-
+La procedura di DISCOVERY viene avviata da un nodo Y che ha appena ricevuto un messaggio di JOIN da un nodo X che vuole aggiungersi al suo ring con un dato nickname. X quindi fa partire un messaggio di tipo DISCOVERY_QUERY con destinatario proprio
+il nickname scelto da X. Se, facendo il giro del ring, il messaggio incontra un nodo T che ha quel nickname, quest'ultimo cambia la tipologia del messaggio in DISCOVERY_ANSWER ad indicare che quel nickname non è disponibile e lo invia ad Y. 
+Dunque una volta che X invia nel ring il DISCOVERY_QUERY possono accadere sostanzialmente due cose:
+1) Il messaggio torna invariato ad Y dopo aver fatto tutto il giro del ring, questo significa che il nickname scelto da X è libero. La procedura va a buon fine.
+2) X riceve un DISCOVERY_ANSWER, il che significa che il nickname è già in uso. La procedura da esito negativo.
 ### Procedura di Acknowledge
 
 ### Procedura di Disconnessione
@@ -60,15 +64,15 @@ N.B: L’inserimento del nuovo host avviene sempre tra il nodo che riceve il joi
 ## Running Info
 Per eseguire il programma bisognerà portarsi nella directory del progetto per poi eseguire il seguente comando nel caso si voglia creare una nuova rete:
 ```
-python peer.py .................
+python peer.py numero01 8000 8001
 ```
 Altrimenti il seguente comando nel caso ci si voglia unire ad una rete già esistente:
 ```
-python peer.py .................
+ python peer.py numero02 8010 8011 -f localhost 8000
 ```
 Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
-  * 
-  * 
+  * A chi si vuole inviare un messaggio, specificando il nickname.
+  * Il messaggio da inviare.
 
 
 ## Vulnerabilità
