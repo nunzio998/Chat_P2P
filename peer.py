@@ -27,6 +27,8 @@ def send_message():
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
             message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+            print("Disconnessione..")
+            break
         elif check_name(destinatario):
             message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
