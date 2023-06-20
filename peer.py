@@ -18,8 +18,8 @@ def send_message():
     il seguente formato: 'TIPO_MESSAGGIO§ID_MITTENTE§ID_DESTINATARIO§MESSAGGIO'
     :return:
     """
-    termination_flag = False  # Flag che uso per forzare la terminazione del thread in caso di quit volontario
 
+    global termination_flag
     while not termination_flag:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
@@ -32,8 +32,6 @@ def send_message():
             message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
-            message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
-            socket_send.sendto(message_close.encode(), peer.get_socket_recv().getsockname())
             # Termino il thread di invio messaggi
             print("Disconnessione..")
             termination_flag = True
@@ -52,6 +50,7 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
         socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
         socket_send.settimeout(1)
         data, addr = socket_send.recvfrom(1024)
+        print(data)
     except:
         # Nessuna risposta ricevuta, l'indirizzo IP o la porta potrebbero non essere disponibili
         raise ValueError(f"L'indirizzo IP {ip_prec} e/o la porta {port_prec} potrebbero non essere disponibili.")
@@ -59,8 +58,8 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
 
 # Funzione per la gestione dei messaggi ricevuti
 def message_handler():
+    global termination_flag
     joiner_address = None
-    termination_flag = False
     while not termination_flag:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
@@ -72,16 +71,13 @@ def message_handler():
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
-            socket_send.sendto("IS_ALIVE".encode(), address)
+            socket_send.sendto("In connessione..".encode(), address)
             joiner_address = msg
             if id_mittente == peer.get_nickname():
                 # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
                 send_connection_refused_message(peer, joiner_address)
             else:
                 send_discovery_query(peer, id_mittente)
-
-        elif msg_type == "TERMINATE":
-            termination_flag = True
 
         elif msg_type == "DISCOVERY_QUERY":
             msg = msg[0]
@@ -211,6 +207,9 @@ else:  # Se sono il primo di un nuovo ring
     port_next = args.PORT_socket_rec
 
 peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
+
+termination_flag = False # Flag che uso per forzare la terminazione del thread in caso di quit volontario
+
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
