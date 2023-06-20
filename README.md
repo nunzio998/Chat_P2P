@@ -5,10 +5,12 @@ Con lo sviluppo di questo progetto vogliamo realizzare un' applicazione di chat 
 
 ### Definizione struttura del Peer
 Ogni peer della rete è rappresentato dalle seguenti caratteristiche:
-- **Nickname**: Composto da ...
-- **Socket di invio messaggi**: ... IP: ... PORTA: ...
-- **Socket di ricezione messaggi**: ... IP: ... PORTA: ...
-- **...**: ...
+- **Nickname**: Il nickname è una stringa alfanumerica che identifica ogni host nel ring ed è dunque univoco. il nickname deve essere composto da sei lettere iniziali e due numeri finali.
+- **Socket di invio messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_rec è PORT_socket_rec.
+- **Socket di ricezione messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_send è PORT_socket_send.
+- **Indirizzo del peer precedente**: Viene impostato all'inizio. Se specifico -f IP_prec PORT_prec sarà (IP_prec, PORT_prec) altrimenti trattandosi del primo nodo di un nuovo ring sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
+- **Indirizzo del peer successivo**: Viene impostato alla fine della procedura di JOIN se il nodo a cui ho mandato il messaggio di JOIN mi invia un CONNECTION_ACCEPTED con l'indirizzo del nodo da impostare come successivo. 
+Quindi se non specifico -f IP_prec PORT_prec non partirà la procedura di JOIN, per cui sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
 ### Tipologie di messaggi
 Per la corretta gestione della chat sono stati implementate diverse tipologie di messaggio al fine di gestire varie funzionalità
 
@@ -28,15 +30,15 @@ Per la corretta gestione della chat sono stati implementate diverse tipologie di
 ### Parsing
 Il parsing coinvolge diversi parametri:
 - nickname: identifica il nickname che l'host vuole e che sarà verificato con la procedura di JOIN. Nel caso in cui l'host sia il primo di un nuovo ring invece viene assegnato e basta.
-- IP_socket_rec: ip della socket di ricezione messaggi.
+- -IP_socket_rec: ip della socket di ricezione messaggi, è opzionale e se non lo inserisco viene preso di default l'ip della macchina che lancia lo script.
 - PORT_socket_rec: porta della socket di ricezione messaggi.
-- IP_socket_send: ip della socket di invio messaggi.
+- -IP_socket_send: ip della socket di invio messaggi. Opzionale, se non lo inserisco viene preso di default l'ip della macchina che lancia lo script.
 - PORT_socket_send: porta della socket di invio messaggi.
 - -f IP_prec PORT_prec: flag e parametri che se specificati indicano che il nodo si aggiungerà ad un ring già esistente. In particolare invierà un messaggio di JOIN all'indirizzo (IP_prec, PORT_prec) col quale partirà la procedura.
 
 Il commando da digitare su CLI per creare un host quindi è il seguente:
 ```
-python peer.py nickname IP_socket_rec PORT_socket_rec IP_socket_send PORT_socket_send -f IP_prec PORT_prec  
+python peer.py nickname -IP_socket_rec <ip di ricezione> PORT_socket_rec -IP_socket_send <ip di invio> PORT_socket_send -f IP_prec PORT_prec  
 ```
 
 ### Procedura di JOIN
@@ -70,7 +72,11 @@ python peer.py numero01 8000 8001
 ```
 Altrimenti il seguente comando nel caso ci si voglia unire ad una rete già esistente:
 ```
- python peer.py numero02 8010 8011 -f localhost 8000
+python peer.py numero02 8010 8011 -f <specificare il proprio ip> 8000
+```
+Inoltre è possibile specificare ip diversi per le socket di ricezioni e invio dei messaggi:
+```
+python peer.py numero02 -IP_socket_rec <ip socket ricezione> 8010 -IP_socket_send <ip socket invio> 8011 -f <specificare il proprio ip> 8000
 ```
 Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
   * A chi si vuole inviare un messaggio, specificando il nickname.
@@ -79,11 +85,11 @@ Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
 
 ## Vulnerabilità
 
-- MITM
-- Disconnessione imprevista
-- Scalabilità
-- Tolleranza ai guasti
-- Privacy e sicurezza
+- MITM: durante la procedura di inserimento di un nodo X, che manda il JOIN a Y, una terza parte Z potrebbe intercettare fin da subito il messaggio e mandare un falso JOIN a Y e un falso CONNECTION_ACCEPTED a X mettendosi in mezzo alla comunicazione nel ring e intercettando potenzialmente tutti i messaggi. 
+- Disconnessione imprevista: attualmente il guasto imprevisto di un nodo non viene gestito. Quindi se dovesse verificarsi che un nodo Y che si trova tra X e Z si guasti l'indirizzo del nodo successivo di X non sarebbe settato con quello di Z e l'indirizzo del nodo precedente di Z non sarebbe settato con quello di X.
+Quindi la comunicazione nel ring sarebbe compromessa.
+- Tolleranza ai guasti: Dato che i nodi sono connessi solo ai loro vicini (precedente e successivo) anche il guasto improvviso di un solo nodo o di un link tra nodi sarebbe fatale per la comunicazione lungo la rete.
+- Privacy e sicurezza: La comunicazione lungo il ring (invio e inoltro di tutti i messaggi) avviene in chiaro, questo implica che chiunque si trovi nello stesso ring può, potenzialmente, leggere i messaggi che viaggiano sullo stesso. Inoltre, come già detto, questa architettura è allo stato attuale molto vulnerabile ai MITM attack.
 
 
 ## Sviluppi Futuri
