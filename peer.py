@@ -1,6 +1,8 @@
 import socket
 import threading
 import argparse
+import time
+
 from naming import *
 from message_handler_utils import *
 from Nodo import Nodo
@@ -34,6 +36,7 @@ def send_message():
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         else:
             print("Il nickname indicato non è valido.")
+        time.sleep(2)
 
 
 def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
