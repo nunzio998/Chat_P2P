@@ -27,9 +27,9 @@ def send_message():
             print("\n")
         elif destinatario.upper() == "QUIT":
             # disconnessione volontaria
-            message_back = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
+            message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
-            message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
+            message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
@@ -50,7 +50,7 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
         message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0],
                                    socket_receive.getsockname()[1])
         socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
-        socket_send.settimeout(1)
+        socket_send.settimeout(2)
         data, addr = socket_send.recvfrom(1024)
         print(data)
     except:
@@ -104,8 +104,7 @@ def message_handler():
             msg = msg[0]
             ack_message_handler(peer, id_mittente, id_destinatario, msg)
 
-        elif msg_type == "QUIT":
-            print(f"l'utente {id_mittente} si è disconnesso..")
+        elif msg_type == "CHANGE_NEXT":
             peer.set_IP_next(msg[0])
             peer.set_PORT_next(msg[1])
         elif msg_type == "CHANGE_PREC":
