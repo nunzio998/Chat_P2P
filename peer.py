@@ -18,7 +18,9 @@ def send_message():
     il seguente formato: 'TIPO_MESSAGGIO§ID_MITTENTE§ID_DESTINATARIO§MESSAGGIO'
     :return:
     """
-    while True:
+    termination_flag = False  # Flag che uso per forzare la terminazione del thread in caso di quit volontario
+
+    while not termination_flag:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
         if destinatario == "":
@@ -29,8 +31,12 @@ def send_message():
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
             message_forward = fmt.packing("QUIT", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+            # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
+            message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message_close.encode(), peer.get_socket_recv().getsockname())
+            # Termino il thread di invio messaggi
             print("Disconnessione..")
-            break
+            termination_flag = True
         elif check_name(destinatario):
             message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
@@ -54,7 +60,8 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
 # Funzione per la gestione dei messaggi ricevuti
 def message_handler():
     joiner_address = None
-    while True:
+    termination_flag = False
+    while not termination_flag:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
@@ -72,6 +79,9 @@ def message_handler():
                 send_connection_refused_message(peer, joiner_address)
             else:
                 send_discovery_query(peer, id_mittente)
+
+        elif msg_type == "TERMINATE":
+            termination_flag = True
 
         elif msg_type == "DISCOVERY_QUERY":
             msg = msg[0]
