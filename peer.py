@@ -63,6 +63,7 @@ def message_handler():
     while not termination_flag:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
+        # print(message, address)
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
 
         # handling del messaggio in base al tipo
@@ -208,8 +209,7 @@ else:  # Se sono il primo di un nuovo ring
 
 peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
 
-termination_flag = False # Flag che uso per forzare la terminazione del thread in caso di quit volontario
-
+termination_flag = False  # Flag che uso per forzare la terminazione del thread in caso di quit volontario
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
