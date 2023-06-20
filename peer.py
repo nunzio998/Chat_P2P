@@ -35,9 +35,15 @@ def send_message():
 
 
 def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
-    message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0],
-                               socket_receive.getsockname()[1])
-    socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
+    try:
+        message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0],
+                                   socket_receive.getsockname()[1])
+        socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
+        socket_send.settimeout(1)
+        data, addr = socket_send.recvfrom(1024)
+    except:
+        # Nessuna risposta ricevuta, l'indirizzo IP o la porta potrebbero non essere disponibili
+        raise ValueError(f"L'indirizzo IP {ip_prec} e/o la porta {port_prec} potrebbero non essere disponibili.")
 
 
 # Funzione per la gestione dei messaggi ricevuti
@@ -54,6 +60,7 @@ def message_handler():
             # Invia i tuoi ip_next e port_next al nuovo nodo
             # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
+            socket_send.sendto("IS_ALIVE".encode(), address)
             joiner_address = msg
             if id_mittente == peer.get_nickname():
                 # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
