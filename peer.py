@@ -8,6 +8,7 @@ from message_handler_utils import *
 from Nodo import Nodo
 import psutil
 from format import Formatting as fmt
+import get_ip
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
@@ -116,12 +117,14 @@ def message_handler():
             print("il formato del messaggio {} non è riconosciuto\n".format(message))
 
 
+my_host_ip = get_ip.get_my_ip()
+
 # Faccio il parsing degli argomenti passati in input dall'utente:
 parser = argparse.ArgumentParser(description="Parametri descrittivi del peer")
 parser.add_argument("nickname", type=str, help="nickname identificativo con cui l'host vuole aggiungersi")
-parser.add_argument("-IP_socket_rec", type=str, default="localhost", help="IP della porta di ricezione dei messaggi")
+parser.add_argument("-IP_socket_rec", type=str, default=my_host_ip, help="IP della porta di ricezione dei messaggi")
 parser.add_argument("PORT_socket_rec", type=int, help="Porta di ricezione dei messaggi")
-parser.add_argument("-IP_socket_send", type=str, default="localhost", help="IP della porta di invio dei messaggi")
+parser.add_argument("-IP_socket_send", type=str, default=my_host_ip, help="IP della porta di invio dei messaggi")
 parser.add_argument("PORT_socket_send", type=int, help="Porta di invio dei messaggi")
 parser.add_argument('-f', nargs=2, metavar=('IP', 'PORT'), help='Specificare l\'indirizzo IP e la porta del nodo a '
                                                                 'cui voglio collegarmi')
@@ -213,7 +216,6 @@ else:  # Se sono il primo di un nuovo ring
     port_next = args.PORT_socket_rec
 
 peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
-
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
