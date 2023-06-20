@@ -53,7 +53,7 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
         socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
         socket_send.settimeout(2)
         data, addr = socket_send.recvfrom(1024)
-        print(data)
+        print(data.decode())
     except:
         # Nessuna risposta ricevuta, l'indirizzo IP o la porta potrebbero non essere disponibili
         raise ValueError(f"L'indirizzo IP {ip_prec} e/o la porta {port_prec} potrebbero non essere disponibili.")
