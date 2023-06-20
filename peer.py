@@ -29,14 +29,14 @@ def send_message():
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         elif check_name(destinatario):
             message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
-            print(message,peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         else:
             print("Il nickname indicato non è valido.")
 
 
 def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
-    message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0], socket_receive.getsockname()[1])
+    message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0],
+                               socket_receive.getsockname()[1])
     socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
 
 
@@ -46,7 +46,6 @@ def message_handler():
     while True:
         data, address = socket_receive.recvfrom(1024)
         message = data.decode()
-        print(f"è arrivato il messaggio: {message} da {address}")
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
 
         # handling del messaggio in base al tipo
@@ -57,7 +56,6 @@ def message_handler():
             # Assegna il nickname se disponibile al nuovo nodo
             joiner_address = msg
             if id_mittente == peer.get_nickname():
-                print("stesso nickname")
                 # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
                 send_connection_refused_message(peer, joiner_address)
             else:
@@ -82,6 +80,7 @@ def message_handler():
             ack_message_handler(peer, id_mittente, id_destinatario, msg)
 
         elif msg_type == "QUIT":
+            print(f"l'utente {id_mittente} si è disconnesso..")
             peer.set_IP_next(msg[0])
             peer.set_PORT_next(msg[1])
         elif msg_type == "CHANGE_PREC":
