@@ -19,7 +19,7 @@ def send_message():
     :return:
     """
 
-    global termination_flag
+    termination_flag = False
     while not termination_flag:
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
@@ -33,6 +33,8 @@ def send_message():
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
+            message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
+            socket_send.sendto(message_close.encode(), peer.get_socket_recv().getsockname())
             print("Disconnessione..")
             termination_flag = True
         elif check_name(destinatario):
@@ -58,7 +60,8 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
 
 # Funzione per la gestione dei messaggi ricevuti
 def message_handler():
-    global termination_flag
+    termination_flag = False
+
     joiner_address = None
     while not termination_flag:
         data, address = socket_receive.recvfrom(1024)
@@ -87,6 +90,9 @@ def message_handler():
         elif msg_type == "DISCOVERY_ANSWER":
             msg = msg[0]
             discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
+
+        elif msg_type == "TERMINATE":
+            termination_flag = True
 
         elif msg_type == "STANDARD":
             # messaggio di tipo standard
@@ -209,7 +215,6 @@ else:  # Se sono il primo di un nuovo ring
 
 peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
 
-termination_flag = False  # Flag che uso per forzare la terminazione del thread in caso di quit volontario
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())
