@@ -21,8 +21,9 @@ Per la corretta gestione della chat sono stati implementate diverse tipologie di
 | TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          |
 | ACK                    | Messaggio di conferma di ricezione. Viene inviato automaticamente come risposta a un messaggio ricevuto correttamente. |
 | CONNECTION_ACCEPTED    | Messaggio inviato per accettare una richiesta di JOIN e fornire le informazioni di connessione.                        |
-| CONNECTION_REFUSED     | Messaggio inviato per rifiutare una richiesta di JOIN a causa di un nickname non disponibile.                          |
 | CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      |
+| CHANGE_NEXT            |                                                                                                                        |
+| CONNECTION_REFUSED     | Messaggio inviato per rifiutare una richiesta di JOIN a causa di un nickname non disponibile.                          |
 | QUIT                   | Messaggio inviato da un nodo per indicare la sua volontà di uscire dal network.                                        |
 ### Parsing
 Il parsing coinvolge diversi parametri:
