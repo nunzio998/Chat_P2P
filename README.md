@@ -70,7 +70,25 @@ La procedura di Acknowledge contribuisce a migliorare l'affidabilità della comu
 In questo modo si riduce la possibilità di perdita di dati e si stabilisce una maggiore sicurezza nella trasmissione delle informazioni tra i nodi del network.
 
 ### Procedura di Disconnessione
+La procedura di disconnessione è la sequenza di operazioni realizzate nella rete al momento in cui un nodo lascia la rete. Distinguiamo due possibili situazioni di disconnessione: disconnessione volontaria e disconnessione involontaria.
+#### Disconnessione volontaria
+La disconnessione volontaria avviene quando un nodo (il quitter) vuole intenzionalmente uscire dalla rete, e lo comunica preventivamente agli altri nodi, così da permettere la riorganizzazione della rete. Questa tipologia di disconnessione è gestita dal sistema nel seguente modo:
+1. L'utente intenzionato ad uscire dalla rete digiterà la parola `quit` in corrispondenza della richiesta "A chi vuoi mandare un messaggio?";
+2. L'host quitter costruirà un messaggio di tipo CHANGE_PREC contenente nel payload ip e porta del proprio nodo precedente, poi manderà questo messaggio al proprio nodo successivo;
+3. L'host quitter costruirà un messaggio di tipo CHANGE_NEXT contenente nel payload ip e porta del proprio nodo successivo, poi manderà questo messaggio al proprio nodo precedente;
+4. Il next del quitter riceverà il CHANGE_PREC e cambierà il proprio prec con i riferienti nel payload del messaggio;
+5. Il prec del quitter riceverà il CHANGE_NEXT e cambierà il proprio next con i riferienti nel payload del messaggio;
+6. L'host quitter potrà a questo punto terminare.
+Così facendo si realizzerà un collegamento (bidirezionale) tra prec e next del nodo quitter, che garantiranno la comunicazione a seguito dell'uscita del quitter.
 
+Questo tipo di strategia locale di gestione della disconnessione permette due importanti vantaggi:
+- la rete non viene affollata di messaggi di quit
+- è possibile la disconnessione multipla contemporanea in diversi punti della rete
+#### Disconnessione involontaria
+La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che questo possa comunicare preventivamente l'uscita al resto della rete. Il sistema attualmente non è in grado di riorganizzarsi in seguito a questo tipo di disconnessione, che quindi causa inevitabilmente una rottura dell'anello di rete. 
+Di conseguenza, per qualsiasi nodo sarà ancora possibile recapitare messaggi ai soli nodi che si trovano dopo di lui (e prima del punto di rottura), senza la possibilità di ricevere indietro la conferma di ricezione (ack).
+
+Nel caso di una disconnessinoe involontaria multipla, si realizzeranno diversi segmenti di rete in cui la comunicazione sarà possibile solo in un verso, e non sarà possibile la ricezione delle conferme. 
 
 ## Running Info
 Per eseguire il programma bisognerà portarsi nella directory del progetto per poi eseguire il seguente comando nel caso si voglia creare una nuova rete:
