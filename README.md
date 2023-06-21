@@ -85,7 +85,9 @@ Questo tipo di strategia locale di gestione della disconnessione permette due im
 - la rete non viene affollata di messaggi di quit
 - è possibile la disconnessione multipla contemporanea in diversi punti della rete
 #### Disconnessione involontaria
-La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che questo possa comunicare preventivamente l'uscita al resto della rete. Il sistema attualmente non è in grado di riorganizzarsi in seguito a questo tipo di disconnessione, che quindi causa inevitabilmente una rottura dell'anello di rete. 
+La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che quest'ultimo possa comunicare preventivamente l'uscita al resto della rete. 
+Il sistema attualmente non è in grado di riorganizzarsi in seguito a questo tipo di disconnessione, perchè il nodo precedente a quello che cade non avrebbe un next attivo, e il nodo successivo a quello che cade non avrebbe un prec attivo. 
+Questo causa inevitabilmente una rottura dell'anello di rete e quindi la compromissinoe della comunicazione.
 Di conseguenza, per qualsiasi nodo sarà ancora possibile recapitare messaggi ai soli nodi che si trovano dopo di lui (e prima del punto di rottura), senza la possibilità di ricevere indietro la conferma di ricezione (ack).
 
 Nel caso di una disconnessinoe involontaria multipla, si realizzeranno diversi segmenti di rete in cui la comunicazione sarà possibile solo in un verso, e non sarà possibile la ricezione delle conferme. 
@@ -110,10 +112,9 @@ Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
 
 ## Vulnerabilità
 
-- MITM: durante la procedura di inserimento di un nodo X, che manda il JOIN a Y, una terza parte Z potrebbe intercettare fin da subito il messaggio e mandare un falso JOIN a Y e un falso CONNECTION_ACCEPTED a X mettendosi in mezzo alla comunicazione nel ring e intercettando potenzialmente tutti i messaggi. 
-- Disconnessione imprevista: attualmente il guasto imprevisto di un nodo non viene gestito. Quindi se dovesse verificarsi che un nodo Y che si trova tra X e Z si guasti l'indirizzo del nodo successivo di X non sarebbe settato con quello di Z e l'indirizzo del nodo precedente di Z non sarebbe settato con quello di X.
-Quindi la comunicazione nel ring sarebbe compromessa.
-- Tolleranza ai guasti: Dato che i nodi sono connessi solo ai loro vicini (precedente e successivo) anche il guasto improvviso di un solo nodo o di un link tra nodi sarebbe fatale per la comunicazione lungo la rete.
+- MITM: durante la procedura di inserimento di un nodo X, che manda il JOIN a Y, una terza parte Z potrebbe intercettare fin da subito il messaggio e mandare un falso JOIN a Y e un falso CONNECTION_ACCEPTED a X mettendosi in mezzo alla comunicazione nel ring e intercettando potenzialmente tutti i messaggi.
+- Disconnessione imprevista: attualmente il guasto imprevisto di un nodo non viene gestito, e causa una segmentazione dell'anello in cui la comunicazione è fortemente limitata.
+- Tolleranza ai guasti di collegamento: il guasto improvviso di un link tra nodi risulta fatale per la comunicazione lungo la rete.
 - Privacy e sicurezza: La comunicazione lungo il ring (invio e inoltro di tutti i messaggi) avviene in chiaro, questo implica che chiunque si trovi nello stesso ring può, potenzialmente, leggere i messaggi che viaggiano sullo stesso. Inoltre, come già detto, questa architettura è allo stato attuale molto vulnerabile ai MITM attack.
 - Se un nodo riesce a prendere controllo della formattazione dei messaggi (possibile?) può causare danni a tutti gli altri della rete
 
