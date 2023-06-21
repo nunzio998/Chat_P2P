@@ -2,25 +2,6 @@ from Nodo import Nodo
 from format import Formatting as fmt
 
 
-def ack_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
-    """
-    Funzione che ha il compito gestire i messaggi di tipo ACK.
-    :param peer:
-    :param id_destinatario:
-    :param message:
-    :return:
-    """
-
-    if id_destinatario == peer.get_nickname():
-        # Il messaggio è indirizzato a me, stampo il messaggio di ack
-        print(message + "\n")
-    else:
-        # il messaggio non è diretto a me allora lo inoltro
-        # al prossimo nodo, continua il giro.
-        ack_msg = fmt.packing("ACK", id_mittente, id_destinatario, message)
-        peer.get_socket_send().sendto(ack_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
-
-
 def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
     """
     Funzione che ha il compito gestire i messaggi di tipo STANDARD.
@@ -52,6 +33,26 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
         peer.get_socket_send().sendto(std_message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
+def ack_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
+    """
+    Funzione che ha il compito gestire i messaggi di tipo ACK.
+    :param id_mittente:
+    :param peer:
+    :param id_destinatario:
+    :param message:
+    :return:
+    """
+
+    if id_destinatario == peer.get_nickname():
+        # Il messaggio è indirizzato a me, stampo il messaggio di ack
+        print(message + "\n")
+    else:
+        # il messaggio non è diretto a me allora lo inoltro
+        # al prossimo nodo, continua il giro.
+        ack_msg = fmt.packing("ACK", id_mittente, id_destinatario, message)
+        peer.get_socket_send().sendto(ack_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+
+
 def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address):
     """
     Funzione che ha il compito gestire i messaggi di tipo DISCOVERY_QUERY.
@@ -62,9 +63,8 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
     :param joiner_address:
     :return:
     """
-    if id_mittente == peer.get_nickname():
-        # il mittente sono io, ma non sono il destinatario
-        # questo vuol dire che il nickname che ha scelto è disponibile
+    if id_mittente == peer.get_nickname():  # il mittente sono io, ma non sono il destinatario
+        # il nickname propost dal joiner è disponibile
 
         # Mando un connection accepted al joiner con le info sui miei ip_next e port_next
         send_connection_accepted_message(peer, joiner_address)
@@ -76,15 +76,16 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
 
     elif id_destinatario == peer.get_nickname():
         # Il messaggio è indirizzato a me, quindi il nickname è occupato
-        discovery_answer_msg = fmt.packing("DISCOVERY_ANSWER", peer.get_nickname(), id_mittente,
-                                           f"{peer.get_nickname()} è già in uso")
-        peer.get_socket_send().sendto(discovery_answer_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        packet = fmt.packing("DISCOVERY_ANSWER", peer.get_nickname(), id_mittente,
+                             f"{peer.get_nickname()} è già in uso")
+        peer.sendto_next()
+        peer.get_socket_send().sendto(packet)
 
     else:
-        # il messaggio non è stato mandato da me e non è diretto a me
+        # il messaggio non è stato mandato da me e non è diretto a me,
         # allora lo inoltro al prossimo nodo, continua il giro.
-        discovery_query_msg = fmt.packing("DISCOVERY_QUERY", id_mittente, id_destinatario, msg)
-        peer.get_socket_send().sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        packet = fmt.packing("DISCOVERY_QUERY", id_mittente, id_destinatario, msg)
+        peer.sendto_next(packet)
 
 
 def discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address):
@@ -98,19 +99,14 @@ def discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_add
     :return:
     """
     if id_destinatario == peer.get_nickname():
-        # Il destinatario sono io. Questo vuol dire che devo comunicare al nodo
-        # che mi ha chiesto di unirsi un messaggio di CONNECTION_REFUSED poiché
-        # il nickname che ha scelto non è disponibile
-
-        # L'id destinatario non è disponibile. Devo mandare un messaggio connection refused.
+        # Il destinatario sono io; il nickname proposto dal joiner non è disponibile
+        # Mando al joiner un messaggio di CONNECTION_REFUSED
         send_connection_refused_message(peer, joiner_address)
 
     else:
-        # il messaggio non è stato mandato da me e non è diretto a me
-        # allora lo inoltro al prossimo nodo, continua il giro fino al
-        # nodo che ha fatto partire la procedura di JOIN.
-        discovery_answer_msg = fmt.packing("DISCOVERY_ANSWER", id_mittente, id_destinatario, msg)
-        peer.get_socket_send().sendto(discovery_answer_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        # il messaggio non è stato mandato da me e non è diretto a me, allora lo inoltro al prossimo nodo
+        packet = fmt.packing("DISCOVERY_ANSWER", id_mittente, id_destinatario, msg)
+        peer.sendto_next(packet)
 
 
 def send_discovery_query(peer: Nodo, id_mittente):
@@ -120,21 +116,28 @@ def send_discovery_query(peer: Nodo, id_mittente):
     :param id_mittente:
     :return:
     """
-    discovery_query_msg = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
-                                          f"{id_mittente} vorrebbe unirsi alla chat")
-    peer.get_socket_send().sendto(discovery_query_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+    packet = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
+                         f"{id_mittente} vorrebbe unirsi alla chat")
+    peer.get_socket_send().sendto(packet.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
 
 
-def send_connection_accepted_message(peer: Nodo, join_node_address: tuple):
-    message_accepted = fmt.packing("CONNECTION_ACCEPTED", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
-    peer.get_socket_send().sendto(message_accepted.encode(), join_node_address)
+def send_connection_accepted_message(peer: Nodo, joiner: tuple):
+    packet = fmt.packing("CONNECTION_ACCEPTED", peer.get_nickname(), "", peer.get_IP_next(),
+                         peer.get_PORT_next())
+    peer.get_socket_send().sendto(packet.encode(), joiner)
 
 
-def send_connection_refused_message(peer: Nodo, address: tuple):
-    message_refused = fmt.packing("CONNECTION_REFUSED", peer.get_nickname(), "", "")
-    peer.get_socket_send().sendto(message_refused.encode(), address)
+def send_connection_refused_message(peer: Nodo, joiner: tuple):
+    packet = fmt.packing("CONNECTION_REFUSED", peer.get_nickname(), "", "")
+    peer.get_socket_send().sendto(packet.encode(), joiner)
 
 
-def send_change_prec_message(peer: Nodo, addr_joiner):
-    message_change_prec = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", addr_joiner[0], addr_joiner[1])
-    peer.get_socket_send().sendto(message_change_prec.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+def send_change_prec_message(peer: Nodo, address):
+    """
+
+    :param peer:
+    :param address: l'indirizzo con cui cambiare il prec del destinatario del messaggio
+    :return:
+    """
+    packet = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", address[0], address[1])
+    peer.sendto_next(packet)

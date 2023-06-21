@@ -29,7 +29,8 @@ def send_message():
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
-            message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
+            message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(),
+                                          peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
@@ -44,18 +45,21 @@ def send_message():
             print("Il nickname indicato non è valido.")
         time.sleep(2)
 
+    # .get_IP_prec(), peer.get_PORT_prec(), args.nickname, socket_receive
 
-def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
+
+def send_join_message(nodo: Nodo):
     try:
-        message_join = fmt.packing("JOIN", joiner_nickname, "", socket_receive.getsockname()[0],
-                                   socket_receive.getsockname()[1])
-        socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
-        socket_send.settimeout(2)
-        data, addr = socket_send.recvfrom(1024)
+        message_join = fmt.packing("JOIN", nodo.get_nickname(), "", nodo.socket_recv.getsockname()[0],
+                                   nodo.socket_recv.getsockname()[1])
+        nodo.sendto_prec(message_join)
+        nodo.socket_send.settimeout(2)
+        data, address = nodo.socket_send.recvfrom(1024)
         print(data.decode())
-    except:
+    except Exception:
         # Nessuna risposta ricevuta, l'indirizzo IP o la porta potrebbero non essere disponibili
-        raise ValueError(f"L'indirizzo IP {ip_prec} e/o la porta {port_prec} potrebbero non essere disponibili.")
+        raise ValueError(f"L'indirizzo IP {nodo.get_IP_prec()} e/o la porta {nodo.get_PORT_prec()} potrebbero non "
+                         f"essere disponibili.")
 
 
 # Funzione per la gestione dei messaggi ricevuti
@@ -64,56 +68,48 @@ def message_handler():
 
     joiner_address = None
     while not termination_flag:
-        data, address = socket_receive.recvfrom(1024)
-        message = data.decode()
+        data, address = peer.receive()
+        packet = data.decode()
         # print(message, address)
-        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
 
-        # handling del messaggio in base al tipo
         if msg_type == "JOIN":
-            # Gestione del messaggio di join da un nuovo nodo
-            # Invia i tuoi ip_next e port_next al nuovo nodo
-            # Avvia la procedura di discovery per trovare un nickname disponibile
             # Assegna il nickname se disponibile al nuovo nodo
-            socket_send.sendto("In connessione..".encode(), address)
+            peer.socket_send.sendto("In connessione..".encode(), address)
             joiner_address = msg
-            if id_mittente == peer.get_nickname():
-                # Il nodo sta cercando di unirsi alla chat con il mio stesso nickname
+            if id_mittente == peer.get_nickname():  # Il joiner ha proposto il mio stesso nickname
+                # mando un CONNECTION_REFUSED
                 send_connection_refused_message(peer, joiner_address)
             else:
+                # avvio la procedura di discovery per vedere se il nickname è disponibile
                 send_discovery_query(peer, id_mittente)
 
         elif msg_type == "DISCOVERY_QUERY":
-            msg = msg[0]
-            discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
+            discovery_query_handler(peer, id_mittente, id_destinatario, msg[0], joiner_address)
 
         elif msg_type == "DISCOVERY_ANSWER":
-            msg = msg[0]
-            discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
-
-        elif msg_type == "TERMINATE" and id_mittente == peer.get_nickname():
-            termination_flag = True
+            discovery_answer_handler(peer, id_mittente, id_destinatario, msg[0], joiner_address)
 
         elif msg_type == "STANDARD":
-            # messaggio di tipo standard
-            msg = msg[0]
-            standard_message_handler(peer, id_mittente, id_destinatario, msg)
+            standard_message_handler(peer, id_mittente, id_destinatario, msg[0])
 
         elif msg_type == "ACK":
-            # messaggio di tipo ack
-            msg = msg[0]
-            ack_message_handler(peer, id_mittente, id_destinatario, msg)
+            ack_message_handler(peer, id_mittente, id_destinatario, msg[0])
 
         elif msg_type == "CHANGE_NEXT":
             peer.set_IP_next(msg[0])
             peer.set_PORT_next(msg[1])
+
         elif msg_type == "CHANGE_PREC":
             peer.set_IP_prec(msg[0])
             peer.set_PORT_prec(msg[1])
-        else:
-            # messaggio non riconosciuto
-            # handle_message(id_mittente, msg)
-            print("il formato del messaggio {} non è riconosciuto\n".format(message))
+
+        elif msg_type == "TERMINATE" and id_mittente == peer.get_nickname():
+            # è arrivato da me stesso un messaggio di tipo terminate
+            termination_flag = True
+
+        else:  # messaggio non riconosciuto
+            print("il formato del messaggio {} non è riconosciuto\n".format(packet))
 
 
 my_host_ip = get_ip.get_my_ip()
@@ -183,38 +179,36 @@ except OSError as error:
 # Se specifico ip e porta del nodo a cui voglio connettermi allora mi sto connettendo ad un anello già
 # esistente. Altrimenti sono il primo di un nuovo anello, per cui la procedura di join non deve essere
 # avviata.
+peer = Nodo(format_name(args.nickname), None, None, None, None, socket_send, socket_receive)
 my_node_id, ip_next, port_next = (None, None, None)
 if args.f:
     received_message = False  # Variabile che userò per verificare la ricezione di una risposta al messaggio di join
-    # Variabili per l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
-    ip_prec, port_prec = args.f
-    port_prec = int(port_prec)
+    # Setto l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
+    peer.set_IP_prec(args.f[0])
+    peer.set_PORT_prec(int(args.f[1]))
 
-    # La procedura di JOIN parte da qui:
+    # Procedura di JOIN:
     # Mando messaggio di join
-    send_join_message(ip_prec, port_prec, args.nickname, socket_receive)
+    send_join_message(peer)
     # Aspetto un messaggio DISCOVERY QUERY O ANSWER
     while not received_message:
-        data, address = socket_receive.recvfrom(1024)
-        message = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(message).values()
+        data, address = peer.receive()
+        packet = data.decode()
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
         if msg_type == "CONNECTION_REFUSED":
             received_message = True
             raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
         elif msg_type == "CONNECTION_ACCEPTED":
             # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
             # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
-            my_node_id = format_name(args.nickname)
-            ip_next, port_next = msg
+            peer.set_IP_next(msg[0])
+            peer.set_PORT_next(msg[1])
             received_message = True
 else:  # Se sono il primo di un nuovo ring
-    my_node_id = format_name(args.nickname)
-    ip_prec = args.IP_socket_rec
-    port_prec = args.PORT_socket_rec
-    ip_next = args.IP_socket_rec
-    port_next = args.PORT_socket_rec
-
-peer = Nodo(my_node_id, ip_next, port_next, ip_prec, port_prec, socket_send, socket_receive)
+    peer.set_IP_prec(args.IP_socket_rec)
+    peer.set_PORT_prec(args.PORT_socket_rec)
+    peer.set_IP_next(args.IP_socket_rec)
+    peer.set_PORT_next(args.PORT_socket_rec)
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())

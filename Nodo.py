@@ -53,3 +53,12 @@ class Nodo:
     # Setter per PORT_prec
     def set_PORT_prec(self, new_PORT_prec):
         self.PORT_prec = new_PORT_prec
+
+    def sendto_next(self, message: str):
+        self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
+
+    def sendto_prec(self, message: str):
+        self.socket_send.sendto(message.encode(), (self.get_IP_prec(), self.get_PORT_prec()))
+
+    def receive(self) -> tuple:
+        return self.socket_recv.recvfrom(1024)
