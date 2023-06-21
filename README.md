@@ -62,6 +62,14 @@ Dunque una volta che X invia nel ring il DISCOVERY_QUERY possono accadere sostan
 2) X riceve un DISCOVERY_ANSWER, il che significa che il nickname è già in uso. La procedura da esito negativo.
 ### Procedura di Acknowledge
 
+La procedura di Acknowledge è un meccanismo implementato per confermare la corretta ricezione di un messaggio da parte di un nodo destinatario. 
+Quando un nodo riceve un messaggio di tipo STANDARD, invia automaticamente un messaggio di conferma, noto come messaggio di tipo ACK, al mittente originale del messaggio. 
+L'ACK serve a garantire che il messaggio sia stato recapitato con successo e che il mittente sia a conoscenza di ciò.
+Il mittente tiene traccia degli ACK ricevuti e può adottare azioni appropriate in base a tali conferme. 
+Se non riceve l'ACK entro un determinato periodo di tempo, il mittente può assumere che il messaggio non sia stato recapitato correttamente e può decidere in totale autonomia di inviarlo nuovamente.
+La procedura di Acknowledge contribuisce a migliorare l'affidabilità della comunicazione all'interno della rete. 
+In questo modo si riduce la possibilità di perdita di dati e si stabilisce una maggiore sicurezza nella trasmissione delle informazioni tra i nodi del network.
+
 ### Procedura di Disconnessione
 
 
