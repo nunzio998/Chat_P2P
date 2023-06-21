@@ -42,13 +42,14 @@ python peer.py nickname -IP_socket_rec <ip di ricezione> PORT_socket_rec -IP_soc
 
 ### Procedura di JOIN
 La procedura di JOIN serve a permettere ad un nodo di unirsi ad un ring e a verificare che il nickname che ha scelto per unirsi sia effettivamente disponibile e non già usato da un altro nodo nel ring.
-Quando un host X vuole unirsi ad una rete (flag e parametri specificati) per prima cosa avvia la procedura inviando un messaggio di JOIN con mittente uguale al nickname che ha scelto al nodo Y che si trova 
+Quando un host X (joiner) vuole unirsi ad una rete (parsing con flag e parametri specificati) per prima cosa avvia la procedura inviando un messaggio di JOIN con mittente uguale al nickname che ha scelto al nodo Y (assistant) che si trova 
 all'indirizzo (IP_prec, PORT_prec) (che deve conoscere a priori per potersi connettere).
-Una volta ricevuto il messaggio di JOIN Y fa partire la procedura di DISCOVERY con la quale si verifica se il nickname scelto da X è disponibile o meno. In base dunque al successo di questa procedura X riceverà 
-un messaggio di risposta da Y di due possibili tipologie:
-- CONNECTION_REFUSED: Il nickname non è disponibile. Il processo viene interrotto e si dovrà riprovare lanciando nuovamente lo script con un altro nickname.
-- CONNECTION_ACCEPTED: La procedura di DISCOVERY è andata a buon fine. Ora, sia Z il nodo successivo ad Y, Y manderà a X un CONNECTION_ACCEPTED con l'ip e la porta di Z da impostare come suoi successivi (in precedenza X aveva già impostato Y come suo predecessore). 
-Dopodiché Y invierà un messaggio a Z con ip e porta di X dicendogli di impostarlo come suo precedente. Infine Y imposterà X come suo successivo. L'inserimento del nodo è completo.
+Una volta ricevuto il messaggio di JOIN, Y fa partire la procedura di DISCOVERY con la quale si verifica se il nickname scelto da X è disponibile o meno. La procedura di discovery è descritta in seguito.
+
+In base al successo o insuccesso della procedura di DISCOVERY si differenziano due scenari:
+- insuccesso: il nickname non è disponibile; l'host assistant manda al joiner un messaggio di tipo CONNECTION_REFUSED; il processo joiner viene interrotto e si dovrà riprovare lanciando nuovamente lo script con un altro nickname;
+- successo: il nickname è disponibile; l'host assistant manda al joiner un messaggio di tipo CONNECTION_ACCEPTED contenente ip e porta del proprio nodo successivo. Il joiner imposta i riferimenti dell'host precedente a quelli dell'assistent, e i riferimenti dell'host successivo a quelli ricevuti nel CONNECTION_ACCEPTED. 
+Successivamente l'assistant manda un messaggio al suo next di tipo CHANGE_PREC, contenente ip e porta del joiner, così che il suo next possa impostare il joiner come proprio prec. Infine, il joiner imposta come next il joiner, e la procedura termina. 
 
 N.B: L’inserimento del nuovo host avviene sempre tra il nodo che riceve il join e il successivo. 
 
