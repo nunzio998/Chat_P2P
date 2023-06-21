@@ -10,6 +10,49 @@ import psutil
 from format import Formatting as fmt
 import get_ip
 
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.backends import default_backend
+
+# Creo la coppia di chiavi
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048
+)
+public_key = private_key.public_key()
+
+# Serializza la chiave pubblica in formato PEM
+public_key_pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+
+def get_cipher_message(plaintext, pub_key):
+    ciphertext = pub_key.encrypt(
+        plaintext.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return ciphertext
+
+
+def get_plaintext(ciphertext):
+    decrypted_message = private_key.decrypt(
+        ciphertext,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return decrypted_message.decode()
+
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
 def send_message():
@@ -30,7 +73,8 @@ def send_message():
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
-            message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(), peer.get_PORT_prec())
+            message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(),
+                                          peer.get_PORT_prec())
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
@@ -39,7 +83,26 @@ def send_message():
             print("Disconnessione..")
             termination_flag = True
         elif check_name(destinatario):
-            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
+            # Richiedo la chiave pubblica del destinatario
+            mess = fmt.packing("GET_PUB_KEY", peer.get_nickname(), destinatario.upper(),
+                               peer.get_socket_send().getsockname()[0], peer.get_socket_send().getsockname()[1])
+            socket_send.sendto(mess.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+
+            # Aspetto di ricevere la chiave pubblica. Aspetto il messaggio sulla socket di send poiché nel mentre
+            # sarà ferma.
+            socket_send.settimeout(2)
+            public_key_pem_received, dat = socket_send.recvfrom(4096)
+
+            key_pub = serialization.load_pem_public_key(
+                public_key_pem_received,
+                backend=default_backend()
+            )
+
+            # Cifro il messaggio
+            m = input("Messaggio:\n")
+            ciphertext = get_cipher_message(m, key_pub)
+
+            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), ciphertext.decode())
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         else:
             print("Il nickname indicato non è valido.")
@@ -52,7 +115,7 @@ def send_join_message(ip_pre, port_pre, joiner_nickname, socket_receive):
                                    socket_receive.getsockname()[1])
         socket_send.sendto(message_join.encode(), (ip_pre, port_pre))
         socket_send.settimeout(2)
-        data, addr = socket_send.recvfrom(1024)
+        data, addr = socket_send.recvfrom(4096)
         print(data.decode())
     except:
         # Nessuna risposta ricevuta, l'indirizzo IP o la porta potrebbero non essere disponibili
@@ -83,7 +146,13 @@ def message_handler():
                 send_connection_refused_message(peer, joiner_address)
             else:
                 send_discovery_query(peer, id_mittente)
-
+        elif msg_type == "GET_PUB_KEY":
+            if id_destinatario == peer.get_nickname():
+                addr = (msg[0], int(msg[1]))
+                socket_send.sendto(public_key_pem, addr)
+            else:  # Lo inoltro al prossimo
+                get_pub_key_message = fmt.packing("GET_PUB_KEY", id_mittente, id_destinatario, msg)
+                peer.get_socket_send().sendto(get_pub_key_message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         elif msg_type == "DISCOVERY_QUERY":
             msg = msg[0]
             discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
@@ -98,7 +167,9 @@ def message_handler():
         elif msg_type == "STANDARD":
             # messaggio di tipo standard
             msg = msg[0]
-            standard_message_handler(peer, id_mittente, id_destinatario, msg)
+            # Decifro il messaggio
+            plaintext = get_plaintext(msg)
+            standard_message_handler(peer, id_mittente, id_destinatario, plaintext)
 
         elif msg_type == "ACK":
             # messaggio di tipo ack
