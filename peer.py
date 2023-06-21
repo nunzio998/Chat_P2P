@@ -25,8 +25,6 @@ def send_message():
         print("--------------------------------")
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
-        if destinatario == "show":
-            print(peer.IP_prec, peer.PORT_prec, peer.IP_next, peer.PORT_next, peer.IP_nextnext, peer.PORT_nextnext)
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
@@ -42,7 +40,7 @@ def send_message():
             termination_flag = True
         elif check_name(destinatario):
             message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
-            socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+            peer.sendto_next(message)
         else:
             print("Il nickname indicato non è valido.")
         time.sleep(2)
