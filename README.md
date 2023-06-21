@@ -26,6 +26,12 @@ Per la corretta gestione della chat sono stati implementate diverse tipologie di
 | CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo precedente al quitter                                                                                                                   |
 | CHANGE_NEXT            | Messaggio inviato per comunicare al nodo precedente di impostare un nuovo nodo come successivo.                        | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo successivo al quitter                                                                                                                   |
 | TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                                                                                             |
+### Struttura del messaggio
+Ogni messaggio scambiato all'interno della rete è composto da quattro campi:
+- **TIPOLOGIA**: identifica la tipologia di messaggio.
+- **ID_MIT**: identifica il nodo che manda il messaggio.
+- **ID_DEST**: identifica il nodo destinatario del messaggio.
+- **PAYLOAD**: contiene il corpo del messaggio con le informazioni utili sulla base della tipologia.
 ### Parsing
 Il parsing coinvolge diversi parametri:
 - nickname: identifica il nickname che l'host vuole e che sarà verificato con la procedura di JOIN. Nel caso in cui l'host sia il primo di un nuovo ring invece viene assegnato e basta.
