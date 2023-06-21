@@ -34,7 +34,7 @@ def send_message():
             socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
-            message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
+            message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", "", "")
             socket_send.sendto(message_close.encode(), peer.get_socket_recv().getsockname())
             print("Disconnessione..")
             termination_flag = True
@@ -92,7 +92,7 @@ def message_handler():
             msg = msg[0]
             discovery_answer_handler(peer, id_mittente, id_destinatario, msg, joiner_address)
 
-        elif msg_type == "TERMINATE":
+        elif msg_type == "TERMINATE" and id_mittente == peer.get_nickname():
             termination_flag = True
 
         elif msg_type == "STANDARD":
