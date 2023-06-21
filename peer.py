@@ -45,8 +45,6 @@ def send_message():
             print("Il nickname indicato non è valido.")
         time.sleep(2)
 
-    # .get_IP_prec(), peer.get_PORT_prec(), args.nickname, socket_receive
-
 
 def send_join_message(nodo: Nodo):
     try:
