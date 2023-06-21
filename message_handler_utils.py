@@ -70,7 +70,13 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
         send_connection_accepted_message(peer, joiner_address)
         # mando un messaggio al mio attuale successivo per dirgli di impostare il joiner come suo precedente
         send_change_prec_message(peer, joiner_address)
-        # e imposto il joiner come mio successivo.
+        if not (peer.get_IP_next() == peer.get_IP_nextnext() and peer.get_PORT_next() == peer.get_PORT_nextnext()):  # se non sono l'unico in rete
+            # mando un messaggio al mio attuale precedente per dirli di impostare il joiner come nextnext
+            send_change_nextnext_message(peer, joiner_address)
+        # impost il nextnext al next
+        peer.set_IP_nextnext(peer.get_IP_next())
+        peer.set_PORT_nextnext(peer.get_PORT_next())
+        # imposto il joiner come mio successivo.
         peer.set_IP_next(joiner_address[0])
         peer.set_PORT_next(joiner_address[1])
 
@@ -141,3 +147,14 @@ def send_change_prec_message(peer: Nodo, address):
     """
     packet = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", address[0], address[1])
     peer.sendto_next(packet)
+
+
+def send_change_nextnext_message(peer: Nodo, address: tuple):
+    """
+
+    :param peer:
+    :param address:
+    :return:
+    """
+    packet = fmt.packing("CHANGE_NEXTNEXT", peer.get_nickname(), "", address[0], address[1])
+    peer.sendto_prec(packet)

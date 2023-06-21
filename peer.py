@@ -25,6 +25,8 @@ def send_message():
         print("--------------------------------")
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
+        if destinatario == "show":
+            print(peer.IP_prec, peer.PORT_prec, peer.IP_next, peer.PORT_next, peer.IP_nextnext, peer.PORT_nextnext)
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
@@ -101,6 +103,11 @@ def message_handler():
         elif msg_type == "CHANGE_PREC":
             peer.set_IP_prec(msg[0])
             peer.set_PORT_prec(msg[1])
+            send_change_nextnext_message(peer, (peer.get_IP_next(), peer.get_PORT_next()))
+
+        elif msg_type == "CHANGE_NEXTNEXT":
+            peer.set_IP_nextnext(msg[0])
+            peer.set_PORT_nextnext(msg[1])
 
         elif msg_type == "TERMINATE" and id_mittente == peer.get_nickname():
             # è arrivato da me stesso un messaggio di tipo terminate
@@ -199,7 +206,7 @@ if args.f:  # se mi collego ad un ring esistente
         peer.set_IP_next(msg[0])
         peer.set_PORT_next(msg[1])
         data, address = peer.receive()
-        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet.decode()).values()
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(data.decode()).values()
         if msg_type == "CHANGE_NEXTNEXT":
             # imposto i valori di ip e porta del nodo nextnext
             peer.set_IP_nextnext(msg[0])
