@@ -39,7 +39,7 @@ def send_message():
             print("Disconnessione..")
             termination_flag = True
         elif check_name(destinatario):
-            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
+            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("\nMessaggio:\n"))
             socket_send.sendto(message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
         else:
             print("Il nickname indicato non è valido.")
