@@ -14,19 +14,18 @@ Quindi se non specifico -f IP_prec PORT_prec non partirà la procedura di JOIN, 
 ### Tipologie di messaggi
 Per la corretta gestione della chat sono stati implementate diverse tipologie di messaggio al fine di gestire varie funzionalità
 
-| TIPOLOGIA DI MESSAGGIO | DESCRIZIONE                                                                                                            |
-|------------------------|------------------------------------------------------------------------------------------------------------------------|
-| STANDARD               | Messaggio inviato tra i nodi del network per la normale comunicazione.                                                 |
-| JOIN                   | Messaggio inviato da un nuovo nodo per richiedere di unirsi al network.                                                |
-| DISCOVERY_QUERY        | Messaggio inviato per verificare la disponibilità di un nickname durante la procedura di JOIN.                         |
-| DISCOVERY_ANSWER       | Messaggio inviato se il nickname del nodo che vuole collegarsi sia già occupato dal un altro nodo.                     |
-| TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          |
-| ACK                    | Messaggio di conferma di ricezione. Viene inviato automaticamente come risposta a un messaggio ricevuto correttamente. |
-| CONNECTION_ACCEPTED    | Messaggio inviato per accettare una richiesta di JOIN e fornire le informazioni di connessione.                        |
-| CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      |
-| CHANGE_NEXT            |                                                                                                                        |
-| CONNECTION_REFUSED     | Messaggio inviato per rifiutare una richiesta di JOIN a causa di un nickname non disponibile.                          |
-| QUIT                   | Messaggio inviato da un nodo per indicare la sua volontà di uscire dal network.                                        |
+| TIPOLOGIA DI MESSAGGIO | DESCRIZIONE                                                                                                            | CAMPI DEL MESSAGGIO<br/>(per chiarezza, il payload viene qui rappresentato in formato fstring)                                                                          |
+|------------------------|------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| STANDARD               | Messaggio inviato tra i nodi del network per la normale comunicazione.                                                 | ID_MIT=nodo che manda il messaggio<br/>ID_DEST=nodo destinatario del messaggio<br/>PAYLOAD=f"{messaggio}"                                                               |
+| JOIN                   | Messaggio inviato da un nuovo nodo per richiedere di unirsi al network.                                                | ID_MIT=id proposto dal joiner all'assistant<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port}" della socket di ricezione                                                         |
+| DISCOVERY_QUERY        | Messaggio inviato per verificare la disponibilità di un nickname durante la procedura di JOIN.                         | ID_MIT=nodo assistant, che manda la query<br/>ID_DEST=id del joiner proposto alla rete<br/>PAYLOAD=f"{id_joiner} vorrebbe unirsi alla chat"                             |
+| DISCOVERY_ANSWER       | Messaggio inviato se il nickname del nodo che vuole collegarsi sia già occupato dal un altro nodo.                     | ID_MIT=id del joiner nella query<br/>ID_DEST=id dell'assistant, da cui proviene la query<br/>PAYLOAD=f"{id_joiner} è già in uso"                                        |
+| ACK                    | Messaggio di conferma di ricezione. Viene inviato automaticamente come risposta a un messaggio ricevuto correttamente. | ID_MIT=nodo che ha ricevuto il messaggio standard<br/>ID_DEST=nodo mittente del messaggio stadard<br/>PAYLOAD=f"{id_ricevitore} ha ricevuto correttamente il messaggio" |
+| CONNECTION_ACCEPTED    | Messaggio inviato per accettare una richiesta di JOIN e fornire le informazioni di connessione.                        | ID_MIT=nodo assistant, che ha mandato la query<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo successivo all'assistant, a cui il joiner si deve collegare            |
+| CONNECTION_REFUSED     | Messaggio inviato per rifiutare una richiesta di JOIN a causa di un nickname non disponibile.                          | ID_MIT=nodo assitant, che ha mandato la query<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                             |
+| CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo precedente al quitter                                                                             |
+| CHANGE_NEXT            |                                                                                                                        | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo successivo al quitter                                                                             |
+| TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                                                       |
 ### Parsing
 Il parsing coinvolge diversi parametri:
 - nickname: identifica il nickname che l'host vuole e che sarà verificato con la procedura di JOIN. Nel caso in cui l'host sia il primo di un nuovo ring invece viene assegnato e basta.
@@ -98,6 +97,7 @@ Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
 Quindi la comunicazione nel ring sarebbe compromessa.
 - Tolleranza ai guasti: Dato che i nodi sono connessi solo ai loro vicini (precedente e successivo) anche il guasto improvviso di un solo nodo o di un link tra nodi sarebbe fatale per la comunicazione lungo la rete.
 - Privacy e sicurezza: La comunicazione lungo il ring (invio e inoltro di tutti i messaggi) avviene in chiaro, questo implica che chiunque si trovi nello stesso ring può, potenzialmente, leggere i messaggi che viaggiano sullo stesso. Inoltre, come già detto, questa architettura è allo stato attuale molto vulnerabile ai MITM attack.
+- Se un nodo riesce a prendere controllo della formattazione dei messaggi (possibile?) può causare danni a tutti gli altri della rete
 
 
 ## Sviluppi Futuri
