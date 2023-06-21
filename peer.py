@@ -177,9 +177,9 @@ except OSError as error:
 # Se specifico ip e porta del nodo a cui voglio connettermi allora mi sto connettendo ad un anello già
 # esistente. Altrimenti sono il primo di un nuovo anello, per cui la procedura di join non deve essere
 # avviata.
-peer = Nodo(format_name(args.nickname), None, None, None, None, socket_send, socket_receive)
+peer = Nodo(format_name(args.nickname), None, None, None, None, None, None, socket_send, socket_receive)
 my_node_id, ip_next, port_next = (None, None, None)
-if args.f:
+if args.f:  # se mi collego ad un ring esistente
     received_message = False  # Variabile che userò per verificare la ricezione di una risposta al messaggio di join
     # Setto l'indirizzo del nodo che conosco nel ring, a cui dovrò inviare il messaggio di JOIN
     peer.set_IP_prec(args.f[0])
@@ -188,25 +188,33 @@ if args.f:
     # Procedura di JOIN:
     # Mando messaggio di join
     send_join_message(peer)
-    # Aspetto un messaggio DISCOVERY QUERY O ANSWER
-    while not received_message:
+    # Aspetto un messaggio CONNECTION_REFUSED O CONNECTION_ACCEPTED
+    data, address = peer.receive()
+    packet = data.decode()
+    msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
+    if msg_type == "CONNECTION_REFUSED":
+        raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
+    elif msg_type == "CONNECTION_ACCEPTED":
+        # imposto i valori di ip e porta del nodo successivo
+        peer.set_IP_next(msg[0])
+        peer.set_PORT_next(msg[1])
         data, address = peer.receive()
-        packet = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
-        if msg_type == "CONNECTION_REFUSED":
-            received_message = True
-            raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
-        elif msg_type == "CONNECTION_ACCEPTED":
-            # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
-            # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
-            peer.set_IP_next(msg[0])
-            peer.set_PORT_next(msg[1])
-            received_message = True
+        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet.decode()).values()
+        if msg_type == "CHANGE_NEXTNEXT":
+            # imposto i valori di ip e porta del nodo nextnext
+            peer.set_IP_nextnext(msg[0])
+            peer.set_PORT_nextnext(msg[1])
+        else:
+            raise Exception("C'è stato un errore durante la connessione. Riprovare.")
+    else:
+        raise Exception("C'è stato un errore durante la connessione. Riprovare.")
 else:  # Se sono il primo di un nuovo ring
     peer.set_IP_prec(args.IP_socket_rec)
     peer.set_PORT_prec(args.PORT_socket_rec)
     peer.set_IP_next(args.IP_socket_rec)
     peer.set_PORT_next(args.PORT_socket_rec)
+    peer.set_IP_nextnext(args.IP_socket_rec)
+    peer.set_PORT_nextnext(args.PORT_socket_rec)
 
 # Creo e avvio il thread per la gestione dei messaggi ricevuti
 message_handler_thread = threading.Thread(target=message_handler, args=())

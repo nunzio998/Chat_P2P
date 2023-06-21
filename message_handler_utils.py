@@ -78,7 +78,7 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
         # Il messaggio è indirizzato a me, quindi il nickname è occupato
         packet = fmt.packing("DISCOVERY_ANSWER", peer.get_nickname(), id_mittente,
                              f"{peer.get_nickname()} è già in uso")
-        peer.sendto_next()
+        peer.sendto_next(packet)
         peer.get_socket_send().sendto(packet)
 
     else:
