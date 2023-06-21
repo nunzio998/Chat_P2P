@@ -3,12 +3,15 @@ import socket
 
 class Nodo:
 
-    def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec, socket_send: socket, socket_recv: socket):
+    def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec, IP_nn, PORT_nn, socket_send: socket,
+                 socket_recv: socket):
         self.nickname = nick
         self.IP_next = IP_next
         self.PORT_next = PORT_next
         self.IP_prec = IP_prec
         self.PORT_prec = PORT_prec
+        self.IP_nextnext = IP_nn
+        self.PORT_nextnext = PORT_nn
         self.socket_send = socket_send
         self.socket_recv = socket_recv
 
@@ -16,15 +19,15 @@ class Nodo:
     def get_nickname(self):
         return self.nickname
 
-    # Getter per IP_next
-    def get_IP_next(self):
-        return self.IP_next
-
     def get_socket_send(self):
         return self.socket_send
 
     def get_socket_recv(self):
         return self.socket_recv
+
+    # Getter per IP_next
+    def get_IP_next(self):
+        return self.IP_next
 
     # Setter per IP_next
     def set_IP_next(self, new_IP_next):
@@ -53,6 +56,21 @@ class Nodo:
     # Setter per PORT_prec
     def set_PORT_prec(self, new_PORT_prec):
         self.PORT_prec = new_PORT_prec
+
+    def get_IP_nextnext(self):
+        return self.IP_nextnext
+
+    # Setter per IP_next
+    def set_IP_nextnext(self, new_IP_nn):
+        self.IP_nextnext = new_IP_nn
+
+    # Getter per PORT_next
+    def get_PORT_nextnext(self):
+        return self.PORT_nextnext
+
+    # Setter per PORT_next
+    def set_PORT_nextnext(self, new_PORT_nn):
+        self.PORT_nextnext = new_PORT_nn
 
     def sendto_next(self, message: str):
         self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
