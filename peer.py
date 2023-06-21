@@ -22,11 +22,10 @@ def send_message():
 
     termination_flag = False
     while not termination_flag:
+        print("--------------------------------")
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
-        if destinatario == "":
-            print("\n")
-        elif destinatario.upper() == "QUIT":
+        if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
             socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
