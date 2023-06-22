@@ -22,15 +22,15 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
         print(f"Messaggio ricevuto da {id_mittente}: {message}\n")
 
         # invio un messaggio di ack al mittente
-        ack_msg = fmt.packing("ACK", peer.get_nickname(), id_mittente, f"{id_destinatario} ha ricevuto correttamente "
+        packet = fmt.packing("ACK", peer.get_nickname(), id_mittente, f"{id_destinatario} ha ricevuto correttamente "
                                                                        f"il messaggio")
-        peer.get_socket_send().sendto(ack_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        peer.sendto_next(packet)
 
     else:
         # il messaggio non è stato mandato da me e non è diretto a me
         # allora lo inoltro al prossimo nodo, continua il giro.
-        std_message = fmt.packing("STANDARD", id_mittente, id_destinatario, message)
-        peer.get_socket_send().sendto(std_message.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        packet = fmt.packing("STANDARD", id_mittente, id_destinatario, message)
+        peer.sendto_next(packet)
 
 
 def ack_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
@@ -49,8 +49,8 @@ def ack_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
     else:
         # il messaggio non è diretto a me allora lo inoltro
         # al prossimo nodo, continua il giro.
-        ack_msg = fmt.packing("ACK", id_mittente, id_destinatario, message)
-        peer.get_socket_send().sendto(ack_msg.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+        packet = fmt.packing("ACK", id_mittente, id_destinatario, message)
+        peer.sendto_next(packet)
 
 
 def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_address):
