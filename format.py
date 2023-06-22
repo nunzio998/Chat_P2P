@@ -8,7 +8,7 @@ class Formatting:
     @staticmethod
     def packing(tipo, id_mittente, id_destinatario, *payload) -> str:
         """
-
+        Funzione per il packing e la formattazione del messaggio.
         :param tipo:
         :param id_mittente:
         :param id_destinatario:
@@ -22,7 +22,7 @@ class Formatting:
     @staticmethod
     def unpacking(messaggio: str) -> dict:
         """
-
+        Funzione per l'unpacking del messaggio.
         :param messaggio:
         :return:
         """

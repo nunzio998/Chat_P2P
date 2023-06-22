@@ -1,22 +1,23 @@
+import argparse
 import socket
 import threading
-import argparse
 import time
 
-from naming import *
-from message_handler_utils import *
-from Nodo import Nodo
 import psutil
-from format import Formatting as fmt
+
 import get_ip
+from Nodo import Nodo
+from format import Formatting as fmt
+from message_handler_utils import *
+from naming import *
 
 
 # Funzione per inviare un messaggio al nodo successivo nel ring
 def send_message():
     """
-    La funziona ha lo scopo d'inviare messaggi standard dei nodi lungo la rete ad anello.
-    Accetta messaggi in ingresso dall'utente con i quali compone il messaggio da inviare che avrà
-    il seguente formato: 'TIPO_MESSAGGIO§ID_MITTENTE§ID_DESTINATARIO§MESSAGGIO'
+    La funzione, che è il target del thread che si occupa dell' invio dei messaggi, ha lo scopo d'inviare messaggi
+    di varie tipologie ai nodi lungo la rete ad anello. Accetta messaggi in ingresso dall'utente con i quali
+    compone il messaggio da inviare che avrà il seguente formato: 'TIPO_MESSAGGIO§ID_MITTENTE§ID_DESTINATARIO§MESSAGGIO'
     :return:
     """
 
@@ -47,6 +48,12 @@ def send_message():
 
 
 def send_join_message(nodo: Nodo):
+    """
+    funzione che ha lo scopo di inviare il messaggio di JOIN al nodo scelto per entrare nel ring. Non appena lo invia si
+    mette in attesa per due secondi di un riscontro per verificare che tale nodo esista e sia raggiungibile.
+    :param nodo:
+    :return:
+    """
     try:
         message_join = fmt.packing("JOIN", nodo.get_nickname(), "", nodo.socket_recv.getsockname()[0],
                                    nodo.socket_recv.getsockname()[1])
@@ -62,6 +69,11 @@ def send_join_message(nodo: Nodo):
 
 # Funzione per la gestione dei messaggi ricevuti
 def message_handler():
+    """
+    Questa funzione è il target del thread che si occupa della gestione dei messaggi ricevuti.
+    Gestisce quindi messaggi di vario tipo, che siano standard o inerenti ad una delle varie procedure implementate.
+    :return:
+    """
     termination_flag = False
 
     joiner_address = None
