@@ -189,19 +189,18 @@ if args.f:
     # Mando messaggio di join
     send_join_message(peer)
     # Aspetto un messaggio DISCOVERY QUERY O ANSWER
-    while not received_message:
-        data, address = peer.receive()
-        packet = data.decode()
-        msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
-        if msg_type == "CONNECTION_REFUSED":
-            received_message = True
-            raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
-        elif msg_type == "CONNECTION_ACCEPTED":
-            # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
-            # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
-            peer.set_IP_next(msg[0])
-            peer.set_PORT_next(msg[1])
-            received_message = True
+    data, address = peer.receive()
+    packet = data.decode()
+    msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
+    if msg_type == "CONNECTION_REFUSED":
+        raise ValueError('Il nickname inserito è già in uso. Riprovare con un nickname diverso.')
+    elif msg_type == "CONNECTION_ACCEPTED":
+        # se la procedura va a buon fine assegno il nickname scelto. Altrimenti termino il processo.
+        # bisognerà inoltre impostare i valori di ip e porta del nodo successivo
+        peer.set_IP_next(msg[0])
+        peer.set_PORT_next(msg[1])
+    else:
+        raise Exception("C'è stato un errore, riprovare.")
 else:  # Se sono il primo di un nuovo ring
     peer.set_IP_prec(args.IP_socket_rec)
     peer.set_PORT_prec(args.PORT_socket_rec)
