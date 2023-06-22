@@ -19,7 +19,7 @@ def standard_message_handler(peer: Nodo, id_mittente, id_destinatario, message):
 
     elif id_destinatario == peer.get_nickname():
         # Il messaggio è indirizzato a me, quindi lo gestisco
-        print(f"\n Messaggio ricevuto da {id_mittente}: {message}\n")
+        print(f"\nMessaggio ricevuto da {id_mittente}: {message}\n")
 
         # invio un messaggio di ack al mittente
         ack_msg = fmt.packing("ACK", peer.get_nickname(), id_mittente, f"{id_destinatario} ha ricevuto correttamente "
