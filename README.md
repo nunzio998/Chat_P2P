@@ -6,8 +6,8 @@ Con lo sviluppo di questo progetto vogliamo realizzare un' applicazione di chat 
 ### Definizione struttura del Peer
 Ogni peer della rete è rappresentato dalle seguenti caratteristiche:
 - **Nickname**: Il nickname è una stringa alfanumerica che identifica ogni host nel ring ed è dunque univoco. il nickname deve essere composto da sei lettere iniziali e due numeri finali.
-- **Socket di invio messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_rec e PORT_socket_rec.
-- **Socket di ricezione messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_send e PORT_socket_send.
+- **Socket di invio messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_send e PORT_socket_send.
+- **Socket di ricezione messaggi**: Composta dall'ip e la porta che vengono specificati all'avvio dello script con i parametri -IP_socket_rec e PORT_socket_rec.
 - **Indirizzo del peer precedente**: Viene impostato all'inizio. Se specifico -f IP_prec PORT_prec sarà (IP_prec, PORT_prec) altrimenti trattandosi del primo nodo di un nuovo ring sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
 - **Indirizzo del peer successivo**: Viene impostato alla fine della procedura di JOIN se il nodo a cui ho mandato il messaggio di JOIN mi invia un CONNECTION_ACCEPTED con l'indirizzo del nodo da impostare come successivo. 
 Quindi se non specifico -f IP_prec PORT_prec non partirà la procedura di JOIN, per cui sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
