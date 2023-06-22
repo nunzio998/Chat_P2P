@@ -25,6 +25,9 @@ def send_message():
         print("--------------------------------")
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
+        if destinatario == "show":
+            print(peer.get_IP_prec(), peer.get_PORT_prec(), peer.get_IP_next(), peer.get_PORT_next(), peer.get_IP_nextnext(), peer.get_PORT_nextnext())
+
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
@@ -39,7 +42,7 @@ def send_message():
             print("Disconnessione..")
             termination_flag = True
         elif check_name(destinatario):
-            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("Messaggio:\n"))
+            message = fmt.packing("STANDARD", peer.get_nickname(), destinatario.upper(), input("\nMessaggio:\n"))
             peer.sendto_next(message)
         else:
             print("Il nickname indicato non è valido.")
@@ -68,7 +71,7 @@ def message_handler():
     while not termination_flag:
         data, address = peer.receive()
         packet = data.decode()
-        # print(message, address)
+        print(packet, address)
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
 
         if msg_type == "JOIN":
