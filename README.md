@@ -11,6 +11,7 @@ Ogni peer della rete è rappresentato dalle seguenti caratteristiche:
 - **Indirizzo del peer precedente**: Viene impostato all'inizio. Se specifico -f IP_prec PORT_prec sarà (IP_prec, PORT_prec) altrimenti trattandosi del primo nodo di un nuovo ring sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
 - **Indirizzo del peer successivo**: Viene impostato alla fine della procedura di JOIN se il nodo a cui ho mandato il messaggio di JOIN mi invia un CONNECTION_ACCEPTED con l'indirizzo del nodo da impostare come successivo. 
 Quindi se non specifico -f IP_prec PORT_prec non partirà la procedura di JOIN, per cui sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
+
 ### Tipologie di messaggi
 Per la corretta gestione della chat sono stati implementate diverse tipologie di messaggio al fine di gestire varie funzionalità
 
@@ -26,12 +27,14 @@ Per la corretta gestione della chat sono stati implementate diverse tipologie di
 | CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo precedente al quitter                                                                                                                   |
 | CHANGE_NEXT            | Messaggio inviato per comunicare al nodo precedente di impostare un nuovo nodo come successivo.                        | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo successivo al quitter                                                                                                                   |
 | TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                                                                                             |
+
 ### Struttura del messaggio
 Ogni messaggio scambiato all'interno della rete è composto da quattro campi:
 - **TIPOLOGIA**: identifica la tipologia di messaggio.
 - **ID_MIT**: identifica il nodo che manda il messaggio.
 - **ID_DEST**: identifica il nodo destinatario del messaggio.
 - **PAYLOAD**: contiene il corpo del messaggio con le informazioni utili sulla base della tipologia.
+
 ### Parsing
 Il parsing coinvolge diversi parametri:
 - nickname: identifica il nickname che l'host vuole e che sarà verificato con la procedura di JOIN. Nel caso in cui l'host sia il primo di un nuovo ring invece viene assegnato e basta.
@@ -93,7 +96,7 @@ Così facendo si realizzerà un collegamento (bidirezionale) tra prec e next del
 Questo tipo di strategia locale di gestione della disconnessione permette due importanti vantaggi:
 - la rete non viene affollata di messaggi di quit
 - è possibile la disconnessione multipla contemporanea in diversi punti della rete
-- 
+
 #### Disconnessione involontaria
 La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che quest'ultimo possa comunicare preventivamente l'uscita al resto della rete. 
 Il sistema attualmente non è in grado di riorganizzarsi in seguito a questo tipo di disconnessione, perché il nodo precedente a quello che cade non avrebbe un next attivo, e il nodo successivo a quello che cade non avrebbe un prec attivo. 
