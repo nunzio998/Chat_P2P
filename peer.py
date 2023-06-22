@@ -188,7 +188,7 @@ if args.f:
     # Procedura di JOIN:
     # Mando messaggio di join
     send_join_message(peer)
-    # Aspetto un messaggio DISCOVERY QUERY O ANSWER
+    # Aspetto un messaggio CONNECTION_REFUSED O CONNECTION_ACCEPTED
     data, address = peer.receive()
     packet = data.decode()
     msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
