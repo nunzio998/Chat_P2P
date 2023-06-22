@@ -127,18 +127,32 @@ def send_discovery_query(peer: Nodo, id_mittente):
 
 
 def send_connection_accepted_message(peer: Nodo, joiner: tuple):
+    """
+    Funzione che ha il compito di inviare un messaggio di tipo CONNECTION_ACCEPTED
+
+    :param peer:
+    :param joiner:
+    :return:
+    """
     packet = fmt.packing("CONNECTION_ACCEPTED", peer.get_nickname(), "", peer.get_IP_next(),
                          peer.get_PORT_next())
     peer.get_socket_send().sendto(packet.encode(), joiner)
 
 
 def send_connection_refused_message(peer: Nodo, joiner: tuple):
+    """
+    Funzione che ha il compito di inviare un messaggio di tipo CONNECTION_REFUSED
+    :param peer:
+    :param joiner:
+    :return:
+    """
     packet = fmt.packing("CONNECTION_REFUSED", peer.get_nickname(), "", "")
     peer.get_socket_send().sendto(packet.encode(), joiner)
 
 
 def send_change_prec_message(peer: Nodo, address):
     """
+    Funzione che ha il compito di inviare un messaggio di tipo CHANGE_PREC
 
     :param peer:
     :param address: l'indirizzo con cui cambiare il prec del destinatario del messaggio
