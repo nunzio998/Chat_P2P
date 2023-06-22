@@ -1,4 +1,6 @@
 import socket
+import time
+import message_handler_utils as mhu
 
 
 class Nodo:
@@ -14,6 +16,9 @@ class Nodo:
         self.PORT_nextnext = PORT_nn
         self.socket_send = socket_send
         self.socket_recv = socket_recv
+        # attributi per gestione disconnessione involontaria
+        self.next_available = True
+        self.__timer__ = 2
 
     # Getter per il nickname
     def get_nickname(self):
@@ -73,10 +78,34 @@ class Nodo:
         self.PORT_nextnext = new_PORT_nn
 
     def sendto_next(self, message: str):
-        self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
+        if self.IP_next == self.IP_nextnext and self.PORT_next == self.PORT_nextnext:
+            self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
+            return
+        if not self.next_available:
+            print("aspetto il timer")
+            time.sleep(self.__timer__)
+        if self.next_available:
+            self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
+            self.next_available = False
+        else:
+            self.riconnection_procedure()
 
     def sendto_prec(self, message: str):
         self.socket_send.sendto(message.encode(), (self.get_IP_prec(), self.get_PORT_prec()))
 
     def receive(self) -> tuple:
+        print("receive")
+        #time.sleep(2)
         return self.socket_recv.recvfrom(1024)
+
+    def set_availability_next(self):
+        print("set ava next")
+        self.next_available = True
+
+    def riconnection_procedure(self):
+        print("non dovrei entrare mai qui")
+        self.IP_next = self.IP_nextnext
+        self.PORT_next = self.PORT_nextnext
+        mhu.send_change_prec_message(self, (self.get_socket_recv().getsockname()[0], self.get_socket_recv().getsockname()[1]))
+        mhu.send_change_nextnext_message(self, (self.IP_next, self.PORT_next))
+        self.next_available = True

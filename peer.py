@@ -74,6 +74,11 @@ def message_handler():
         print(packet, address)
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
 
+        if not msg_type == "NOTICE":
+            print("mando il notice")
+            packet = fmt.packing("NOTICE", "", "", "")
+            peer.sendto_prec(packet)
+
         if msg_type == "JOIN":
             # Assegna il nickname se disponibile al nuovo nodo
             peer.socket_send.sendto("In connessione..".encode(), address)
@@ -113,6 +118,9 @@ def message_handler():
         elif msg_type == "TERMINATE" and id_mittente == peer.get_nickname():
             # è arrivato da me stesso un messaggio di tipo terminate
             termination_flag = True
+
+        elif msg_type == "NOTICE":
+            peer.set_availability_next()
 
         else:  # messaggio non riconosciuto
             print("il formato del messaggio {} non è riconosciuto\n".format(packet))
