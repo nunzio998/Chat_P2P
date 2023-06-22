@@ -25,9 +25,6 @@ def send_message():
         print("--------------------------------")
         destinatario = input("A chi vuoi mandare un messaggio?\n")
 
-        if destinatario == "show":
-            print(peer.get_IP_prec(), peer.get_PORT_prec(), peer.get_IP_next(), peer.get_PORT_next(), peer.get_IP_nextnext(), peer.get_PORT_nextnext())
-
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
@@ -71,11 +68,10 @@ def message_handler():
     while not termination_flag:
         data, address = peer.receive()
         packet = data.decode()
-        print(packet, address)
+        # print(packet, address)
         msg_type, id_mittente, id_destinatario, msg = fmt.unpacking(packet).values()
 
         if not msg_type == "NOTICE":
-            print("mando il notice")
             packet = fmt.packing("NOTICE", "", "", "")
             peer.sendto_prec(packet)
 

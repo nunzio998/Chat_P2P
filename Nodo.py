@@ -82,7 +82,6 @@ class Nodo:
             self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
             return
         if not self.next_available:
-            print("aspetto il timer")
             time.sleep(self.__timer__)
         if self.next_available:
             self.socket_send.sendto(message.encode(), (self.get_IP_next(), self.get_PORT_next()))
@@ -94,16 +93,13 @@ class Nodo:
         self.socket_send.sendto(message.encode(), (self.get_IP_prec(), self.get_PORT_prec()))
 
     def receive(self) -> tuple:
-        print("receive")
         #time.sleep(2)
         return self.socket_recv.recvfrom(1024)
 
     def set_availability_next(self):
-        print("set ava next")
         self.next_available = True
 
     def riconnection_procedure(self):
-        print("non dovrei entrare mai qui")
         self.IP_next = self.IP_nextnext
         self.PORT_next = self.PORT_nextnext
         mhu.send_change_prec_message(self, (self.get_socket_recv().getsockname()[0], self.get_socket_recv().getsockname()[1]))
