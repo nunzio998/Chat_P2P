@@ -85,7 +85,6 @@ def discovery_query_handler(peer, id_mittente, id_destinatario, msg, joiner_addr
         packet = fmt.packing("DISCOVERY_ANSWER", peer.get_nickname(), id_mittente,
                              f"{peer.get_nickname()} è già in uso")
         peer.sendto_next(packet)
-        peer.get_socket_send().sendto(packet)
 
     else:
         # il messaggio non è stato mandato da me e non è diretto a me,
@@ -124,7 +123,7 @@ def send_discovery_query(peer: Nodo, id_mittente):
     """
     packet = fmt.packing("DISCOVERY_QUERY", peer.get_nickname(), id_mittente,
                          f"{id_mittente} vorrebbe unirsi alla chat")
-    peer.get_socket_send().sendto(packet.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+    peer.sendto_next(packet)
 
 
 def send_connection_accepted_message(peer: Nodo, joiner: tuple):

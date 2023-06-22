@@ -28,10 +28,10 @@ def send_message():
         if destinatario.upper() == "QUIT":
             # disconnessione volontaria
             message_back = fmt.packing("CHANGE_NEXT", peer.get_nickname(), "", peer.get_IP_next(), peer.get_PORT_next())
-            socket_send.sendto(message_back.encode(), (peer.get_IP_prec(), peer.get_PORT_prec()))
+            peer.sendto_prec(message_back)
             message_forward = fmt.packing("CHANGE_PREC", peer.get_nickname(), "", peer.get_IP_prec(),
                                           peer.get_PORT_prec())
-            socket_send.sendto(message_forward.encode(), (peer.get_IP_next(), peer.get_PORT_next()))
+            peer.sendto_next(message_forward)
             # Invio il messaggio alla socket che riceve i messaggi per terminare anche quel thread
             # Termino il thread di invio messaggi
             message_close = fmt.packing("TERMINATE", peer.get_nickname(), "", "", "")
