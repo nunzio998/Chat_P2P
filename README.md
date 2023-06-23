@@ -11,6 +11,7 @@ Ogni peer della rete è rappresentato dalle seguenti caratteristiche:
 - **Indirizzo del peer precedente**: Viene impostato all'inizio. Se specifico -f IP_prec PORT_prec sarà (IP_prec, PORT_prec) altrimenti trattandosi del primo nodo di un nuovo ring sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
 - **Indirizzo del peer successivo**: Viene impostato alla fine della procedura di JOIN se il nodo a cui ho mandato il messaggio di JOIN mi invia un CONNECTION_ACCEPTED con l'indirizzo del nodo da impostare come successivo. 
 Quindi se non specifico -f IP_prec PORT_prec non partirà la procedura di JOIN, per cui sarà identificato dalla socket di ricezione del nodo stesso (IP_socket_rec, PORT_socket_rec)
+- **Indirizzo del peer successivo al successivo**: viene utilizzato sostanzialmente solo per la gestione della riorganizzazione della rete un presenza di guarsi, non è utilizzato per comunicazioni.
 
 ### Tipologie di messaggi
 Per la corretta gestione della chat sono stati implementate diverse tipologie di messaggio al fine di gestire varie funzionalità
@@ -27,6 +28,7 @@ Per la corretta gestione della chat sono stati implementate diverse tipologie di
 | CHANGE_PREC            | Messaggio inviato per comunicare al nodo successivo di impostare un nuovo nodo come predecessore.                      | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo precedente al quitter                                                                                                                   |
 | CHANGE_NEXT            | Messaggio inviato per comunicare al nodo precedente di impostare un nuovo nodo come successivo.                        | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=f"{ip}£{port} del nodo successivo al quitter                                                                                                                   |
 | TERMINATE              | Messaggio inviato (quando digito quit) dal thread di invio a quello di gestione messaggi per farlo terminare.          | ID_MIT=nodo quitter<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                                                                                             |
+| NOTICE.                | Messaggio inviato in risposta ad un qualsiasi messaggio proveniente dal nodo prec. Serve a comunicare la propria attività e a innescare la procedura di gestione guasti.      | ID_MIT=""<br/>ID_DEST=""<br/>PAYLOAD=""                                                                                                                                                             |
 
 ### Struttura del messaggio
 Ogni messaggio scambiato all'interno della rete è composto da quattro campi:
@@ -98,12 +100,19 @@ Questo tipo di strategia locale di gestione della disconnessione permette due im
 - è possibile la disconnessione multipla contemporanea in diversi punti della rete
 
 #### Disconnessione involontaria
-La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che quest'ultimo possa comunicare preventivamente l'uscita al resto della rete. 
-Il sistema attualmente non è in grado di riorganizzarsi in seguito a questo tipo di disconnessione, perché il nodo precedente a quello che cade non avrebbe un next attivo, e il nodo successivo a quello che cade non avrebbe un prec attivo. 
-Questo causa inevitabilmente una rottura dell'anello di rete e quindi la compromissione della comunicazione.
-Di conseguenza, per qualsiasi nodo sarà ancora possibile recapitare messaggi ai soli nodi che si trovano dopo di lui (e prima del punto di rottura), senza la possibilità di ricevere indietro la conferma di ricezione (ack).
+La disconnessione involontaria si realizza nel momento in cui il processo di un nodo termina senza preavviso, quindi senza che quest'ultimo possa comunicare preventivamente l'uscita al resto della rete.
+il sistema attualmente è in grado di gestire la disconnessione volontaria (tolleranza ai guasti) ma solo di un nodo alla volta nella stessa porzione di rete.
 
-Nel caso di una disconnessione involontaria multipla, si realizzeranno diversi segmenti di rete in cui la comunicazione sarà possibile solo in un verso, e non sarà possibile la ricezione delle conferme. 
+La gestione dei guasti è basata sull'utilizzo di:
+- messaggi di NOTICE, inviati automaticamente da ogni nodo al peer precedente in risposta ad ogni messaggio proveniente da esso per comunicare la propria attività in rete
+- collegamento di ogni nodo al successivo del successivo.
+
+la procedura si articola come segue:
+1. un nodo (reorganiser) si accorge del guasto del successivo per via della mancata ricezione di un NOTICE;
+2. lo stesso nodo imposta come proprio next il nodo attualmente nextnext
+3. lo stesso manda un CHANGE_PREC al next contenente il riferimento di sé stesso*
+4. lo stesso manda un CHANGE_NEXTNEXT al prec con il riferimento dell'attuale next
+5. il nodo next invia all'organizer un CHANGE_NEXTNEXT con il riferimento del proprio next.
 
 ## Running Info
 Per eseguire il programma bisognerà portarsi nella directory del progetto per poi eseguire il seguente comando nel caso si voglia creare una nuova rete:
