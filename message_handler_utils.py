@@ -122,8 +122,8 @@ def send_discovery_query(peer: Nodo, id_mittente):
 
 def send_connection_accepted_message(peer: Nodo, joiner: tuple):
     """
-    Funzione che gestisce l'invio dei messaggi di tipo CONNECTION_ACCEPTED in riferimento al fatto che la procedura di
-    JOIN è andata a buon fine.
+    Funzione che ha il compito di inviare un messaggio di tipo CONNECTION_ACCEPTED
+
     :param peer:
     :param joiner:
     :return:
@@ -135,8 +135,7 @@ def send_connection_accepted_message(peer: Nodo, joiner: tuple):
 
 def send_connection_refused_message(peer: Nodo, joiner: tuple):
     """
-    Funzione che gestisce l'invio dei messaggi di tipo CONNECTION_REFUSED in riferimento al fatto che la procedura di
-    JOIN non è andata a buon fine.
+    Funzione che ha il compito di inviare un messaggio di tipo CONNECTION_REFUSED
     :param peer:
     :param joiner:
     :return:
@@ -147,9 +146,8 @@ def send_connection_refused_message(peer: Nodo, joiner: tuple):
 
 def send_change_prec_message(peer: Nodo, address):
     """
-    Funzione che si occupa di inviare un messaggio con il quale si dice al peer di cambiare i propri riferimenti al nodo
-    precedente con l'address specificato in input. Viene esclusivamente usata nel discovery_query_handler nel caso in
-    cui la procedura di JOIN vada a buon fine.
+    Funzione che ha il compito di inviare un messaggio di tipo CHANGE_PREC
+
     :param peer:
     :param address: l'indirizzo con cui cambiare il prec del destinatario del messaggio
     :return:
