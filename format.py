@@ -8,7 +8,8 @@ class Formatting:
     @staticmethod
     def packing(tipo, id_mittente, id_destinatario, *payload) -> str:
         """
-
+        Funzione che ha il compito di creare un pacchetto da inviare a partire dai parametri passati
+        utilizzando il separatore di pacchetti e di payload
         :param tipo:
         :param id_mittente:
         :param id_destinatario:
@@ -22,7 +23,8 @@ class Formatting:
     @staticmethod
     def unpacking(messaggio: str) -> dict:
         """
-
+        Funzione che ha il compito di creare un dizionario a partire dal pacchetto ricevuto
+        sulla base del separatore di pacchetti e di payload
         :param messaggio:
         :return:
         """
