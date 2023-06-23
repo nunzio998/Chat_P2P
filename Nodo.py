@@ -2,6 +2,10 @@ import socket
 
 
 class Nodo:
+    """
+    Classe che definisce la struttura di ogni peer nella rete e che implementa tutti i metodi necessari per il get
+    e il set degli attributi dei peer stessi.
+    """
 
     def __init__(self, nick, IP_next, PORT_next, IP_prec, PORT_prec, socket_send: socket, socket_recv: socket):
         self.nickname = nick

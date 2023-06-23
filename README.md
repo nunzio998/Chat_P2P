@@ -139,9 +139,9 @@ Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
 - Disconnessione imprevista: attualmente il guasto imprevisto di un nodo non viene gestito, e causa una segmentazione dell'anello in cui la comunicazione è fortemente limitata.
 - Tolleranza ai guasti di collegamento: il guasto improvviso di un link tra nodi risulta fatale per la comunicazione lungo la rete.
 - Privacy e sicurezza: La comunicazione lungo il ring (invio e inoltro di tutti i messaggi) avviene in chiaro, questo implica che chiunque si trovi nello stesso ring può, potenzialmente, leggere i messaggi che viaggiano sullo stesso. Inoltre, come già detto, questa architettura è allo stato attuale molto vulnerabile ai MITM attack.
-- Se un nodo riesce a prendere controllo della formattazione dei messaggi (possibile?) può causare danni a tutti gli altri della rete
-
-
+- Se un nodo riesce a prendere controllo della formattazione dei messaggi (possibile?) può causare danni a tutti gli altri della rete.
+- Se un messaggio supera la lunghezza del MTU previsto dall'UDP il thread di message_handler va in errore.
+- Se due utenti, adiacenti, effettuano il quit nello stesso momento la topologia di rete non viene riorganizzata correttamente e il ring si spezza.
 ## Sviluppi Futuri
 - Architettura a anello con ridondanza:
   - Ogni nodo è collegato al suo vicino immediato e al vicino del vicino per garantire un percorso alternativo in caso di guasto o disconnessione imprevista di un peer della rete.
@@ -156,3 +156,5 @@ Una volta eseguito, all'utente verrà chiesto di specificare i seguenti input:
   - Il mittente utilizza la chiave pubblica del destinatario per crittografare i dati.
   - Ogni hop nel percorso può provare a decriptare i dati utilizzando la propria chiave privata per verificare se sono il destinatario legittimo.
   - L'utilizzo di algoritmi di hashing per garantire l'integrità dei dati durante la trasmissione.
+- Bisogna far gestire al peer prima di inviare il messaggio la segmentazione dello stesso in modo tale da non superare l'MTU massimo consentito.
+- Gestione disconnessione volontaria e non da parte di due o più utenti adiacenti.
